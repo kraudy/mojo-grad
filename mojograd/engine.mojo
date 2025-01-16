@@ -7,20 +7,19 @@ from memory import pointer
 fn otro_fun ():
     print("Hello from fun")
 
-@value
+@value # Understand what this does
 #struct Value(CollectionElement, Writable, Stringable): # These two gives error
-struct Value(CollectionElement):
+#struct Value(CollectionElement): # Understand what this does
+struct Value():
     var data: UnsafePointer[Float32]
     var grad : Float32
     var _backward : fn() -> None
-    # Using a list of more than one pointer gives compiler error. So one pointer it is
+    # The compiler does not like an array of pointers of more than 1 element, so  1 element array it is
     var _prev1 : List[ArcPointer[Self]]
     var _prev2 : List[ArcPointer[Self]]
     var _op : String
 
     fn __init__(out self, data: Float32,
-                        #_children: List[Float32], # Maybe i can use pointers to Value object 
-                        #_children2: List[UnsafePointer[Value]] , 
                         _backward : fn(),
                         _children1: List[ArcPointer[Self]] = List[ArcPointer[Self]](),
                         _children2: List[ArcPointer[Self]] = List[ArcPointer[Self]](),
@@ -33,10 +32,9 @@ struct Value(CollectionElement):
 
         self._backward = _backward
 
+        # if len(_chiledren) > 1
         if _children1:
-            # Note that you can not directly call len on an optional argument
-            # as you would on a normal argument
-            #self._prev3 = ArcPointer[Value].alloc(len(_children2.value()))
+            # There is no alloc por ArcPointer
             self._prev1 = List[ArcPointer[Value]](capacity=1)
         else:
             self._prev1 = List[ArcPointer[Value]](capacity=0)
@@ -62,13 +60,19 @@ struct Value(CollectionElement):
 
 
 def main():
-    #var midata : List[Float64]
-    #var midata : List[SIMD[Float64, 1]] = []
-    #midata.append(1.0)
-    #midata.append(2.0)
-    # var midata : UnsafePointer[Scalar[DType.float32]]
-    # midata.store(1.0)
-    # midata.store(2.0)
-    v = Value(data = 3.0, _backward = otro_fun)
-    print(v.data.load())
-    v._backward()
+    var a = Value(data = 3.0, _backward = otro_fun)
+    var b = Value(data = 1.0, _backward = otro_fun)
+    print(a.data.load())
+    a._backward()
+
+    #var c = Value(data = 1.0, _backward = otro_fun, _children1 = a, _children2 = b)
+    var c = Value(data = 1.0, _backward = otro_fun, 
+                  _children1 = List[ArcPointer[Value]](a),
+                  _children2 = List[ArcPointer[Value]](b))
+    print(c.data.load())
+    print(c._prev1.data)
+    #print(c._prev1[0][].data.load()) # Seg fault error
+    #print(c._prev1[0][].data)
+    print(c._prev2.data)
+    c._backward()
+    #var c = Value(data = 1.0, _backward = otro_fun, _children1 = List[a])
