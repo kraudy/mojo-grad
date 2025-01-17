@@ -1,8 +1,13 @@
 """  """
 
-from collections import Optional, Dict, InlineList
+from collections import Optional, List, Dict, InlineList
 from memory import UnsafePointer, memset_zero, ArcPointer
 from memory import pointer
+
+from utils import Variant
+# This can be useful for acceptinNone
+alias ValueOrFloat = Variant[Value, Float32]
+alias ValueOrNone  = Variant[Value, NoneType]
 
 fn otro_fun ():
     print("Hello from fun")
@@ -13,14 +18,20 @@ fn otro_fun ():
 struct Value():
     var data: UnsafePointer[Float32]
     var grad : Float32
-    var _backward : fn() -> None
+    #var _backward : fn() -> None
+    var _backward : List[fn() -> None]
     # The compiler does not like an array of pointers of more than 1 element, so  1 element array it is
+    var _prev : List[Self]
     var _prev1 : List[ArcPointer[Self]]
     var _prev2 : List[ArcPointer[Self]]
     var _op : String
 
     fn __init__(out self, data: Float32,
-                        _backward : fn(),
+                        # This needs to be optional also
+                        # for when we only pass a number
+                        #_backward : fn(),
+                        _backward : List[fn()] = List[fn()](),
+                        #_backward: fn() -> None = fn() -> None { },
                         _children1: List[ArcPointer[Self]] = List[ArcPointer[Self]](),
                         _children2: List[ArcPointer[Self]] = List[ArcPointer[Self]](),
                         _op : Optional[String] = None) # Note how optionl arguments must be at the end
@@ -30,7 +41,10 @@ struct Value():
         self.data.store(data)
         self.grad = 0
 
-        self._backward = _backward
+        if _backward:
+            self._backward = _backward
+        else:
+            self._backward = List[fn() -> None]()
 
         # if len(_chiledren) > 1
         if _children1:
@@ -57,15 +71,33 @@ struct Value():
         self._prev2 = existing._prev2
         self._op = existing._op
     
+    #fn __add__(self, other: Self):
+    fn __add__(self, other: ValueOrFloat) -> Value:
+        # If the value passed is not Value
+        # This isa can be useful to accept multiples types on a parameter
+        if other.isa[Float32]():
+            #var other2 = Value(data = other.take[Float32]())
+            var other2 = Value(data = other[Float32])
+        else:
+            var other2 = other[Value]
+        
+        var out = Value(data = self.data.load())
+            
+    
 
 
 def main():
+    var d = Value(data = 3.0)
     var a = Value(data = 3.0, _backward = otro_fun)
     var b = Value(data = 1.0, _backward = otro_fun)
     print(a.data.load())
-    a._backward()
+    #a._backward()
+    # Get first element
+    a._backward[0]()
+
 
     #var c = Value(data = 1.0, _backward = otro_fun, _children1 = a, _children2 = b)
+    # Maybe i can add another function to the class to do this thing
     var c = Value(data = 1.0, _backward = otro_fun, 
                   _children1 = List[ArcPointer[Value]](a),
                   _children2 = List[ArcPointer[Value]](b))
