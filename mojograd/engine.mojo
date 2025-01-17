@@ -8,9 +8,11 @@ from utils import Variant
 # This can be useful for acceptinNone
 alias ValueOrFloat = Variant[Value, Float32]
 alias ValueOrNone  = Variant[Value, NoneType]
+alias FunOrNone  = Variant[fn(mut Value), NoneType]
 
 fn otro_fun ():
     print("Hello from fun")
+
 
 @value # Understand what this does
 #struct Value(CollectionElement, Writable, Stringable): # These two gives error
@@ -21,7 +23,8 @@ struct Value():
     var grad : Float32
     #var _backward : fn() -> None
     #var _backward : List[fn() -> None]
-    var _backward : List[fn(mut self: Self) -> None]
+    #var _backward : List[fn(mut self: Self) -> None]
+    var _backward : fn(mut self: Self) -> None
     # The compiler does not like an array of pointers of more than 1 element, so  1 element array it is
     #var _prev : List[Self] # Maybe this can be implemented instead of ArcPointer?
     var _prev1 : List[ArcPointer[Self]]
@@ -33,7 +36,9 @@ struct Value():
                         # This needs to be optional also
                         # for when we only pass a number
                         #_backward : fn(),
-                        _backward : List[fn(mut self: Self)] = List[fn(mut self: Self)](),
+                        #_backward : List[fn(mut self: Self)] = List[fn(mut self: Self)](),
+                        # this may be the way of doing
+                        _backward : FunOrNone = FunOrNone(None),
                         #_backward: fn() -> None = fn() -> None { },
                         _children1: List[ArcPointer[Self]] = List[ArcPointer[Self]](),
                         _children2: List[ArcPointer[Self]] = List[ArcPointer[Self]](),
@@ -44,10 +49,19 @@ struct Value():
         self.data.store(data)
         self.grad = 0
 
-        if _backward:
-            self._backward = _backward
+        fn defaul_backward(mut self: Self) -> None:
+            pass
+
+        if _backward.isa[NoneType]():
+            #self._backward = fn(mut Value) -> None
+            self._backward = defaul_backward
         else:
-            self._backward = List[fn(mut self: Self) -> None]()
+            self._backward = _backward[fn(mut self: Self)]
+
+        #if _backward:
+            #self._backward = _backward
+        #else:
+            #self._backward = List[fn(mut self: Self) -> None]()
 
         # if len(_chiledren) > 1
         if _children1:
@@ -66,6 +80,8 @@ struct Value():
         else:
             self._op = ''
     
+    
+
     fn __moveinit__(out self, owned existing: Self):
         self.data = existing.data
         self.grad = existing.grad
@@ -90,12 +106,20 @@ struct Value():
                                 _children1 = List[ArcPointer[Value]](self),
                                 _children2 = List[ArcPointer[Value]](other2))
 
-        fn _backward(mut self: Value) -> None:
+        #fn _backward(mut self: Self) -> None:
+            #self.grad += out.grad
+            #other2.grad += out.grad
+        
+        fn _backward(mut self: Value, out: Value, mut other: Value) -> None:
             self.grad += out.grad
-            other2.grad += out.grad
+            other.grad += out.grad
 
+        fn wrapper(mut self: Value) -> None:
+            _backward(self, out, other2)
+
+        out._backward = wrapper
         #out._backward = _backward
-        out._backward.append(_backward)
+        #out._backward.append(_backward)
         #out._backward[0] = _backward()
         #out._backward = List[_backward]()
 
