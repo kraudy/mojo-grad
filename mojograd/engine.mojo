@@ -8,7 +8,6 @@ from utils import Variant
 # This can be useful for acceptinNone
 alias ValueOrFloat = Variant[Value, Float32]
 alias ValueOrNone  = Variant[Value, NoneType]
-alias FunOrNone  = Variant[fn(mut Value), NoneType]
 alias SelfOrNone  = Variant[Value, NoneType]
 
 fn otro_fun ():
@@ -22,16 +21,9 @@ struct Value():
     #TODO: This does not needs to be a pointer
     var data: ArcPointer[Float32]
     var grad : ArcPointer[Float32]
-    #var _backward : fn() -> None
-    #var _backward : List[fn() -> None]
-    #var _backward : List[fn(mut self: Self) -> None]
-    #var _backward : fn(mut self: Self) -> None
-    #var _backward : ArcPointer[fn()]
-    #var _backward : ArcPointer[fn()]
-    #var _backward : ArcPointer[Int]
 
-    var _prev1 : ValueOrNone
-    var _prev2 : ValueOrNone
+    var _prev1 : List[ArcPointer[Value]]
+    var _prev2 : List[ArcPointer[Value]]
     #var _prev  : Tuple[Self, Self]
     var _op : ArcPointer[String]
 
@@ -42,8 +34,8 @@ struct Value():
         self.grad = ArcPointer[Float32](0)
 
 
-        self._prev1 = None
-        self._prev2 = None
+        self._prev1 = List[ArcPointer[Value]]() 
+        self._prev2 = List[ArcPointer[Value]]() 
 
         self._op = ArcPointer[String]('') 
     
@@ -57,39 +49,32 @@ struct Value():
     
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] + other.data[]))
-        out._prev1 = self
-        out._prev2 = other
+        out._prev1 = List[ArcPointer[Value]](self) 
+        out._prev2 = List[ArcPointer[Value]](other) 
+        out._op = ArcPointer[String]('+')
 
         return out
 
     fn __add__(self, other: Float32) -> Value:
         # If the value passed is not Value
         # This isa can be useful to accept multiples types on a paramete
-
-        return out
+        var v = Value(other)
+        # We are only making the conversion and reusing the value logic
+        return self.__add__(v)
             
     
 
 
 def main():
-    var d = Value(data = 3.0)
-    var a = Value(data = 3.0)
-    var b = Value(data = 1.0)
-    print(a.data.load())
-    #a._backward()
-    # Get first element
-    #a._backward[0]()
-
+    pass
+    var a = Value(data = 1.0)
+    var b = Value(data = 2.0)
+    print(a.data[])
 
     #var c = Value(data = 1.0, _backward = otro_fun, _children1 = a, _children2 = b)
     # Maybe i can add another function to the class to do this thing
-    var c = Value(data = 1.0, 
-                  _children1 = List[ArcPointer[Value]](a),
-                  _children2 = List[ArcPointer[Value]](b))
-    print(c.data.load())
-    print(c._prev1.data)
-    #print(c._prev1[0][].data.load()) # Seg fault error
-    #print(c._prev1[0][].data)
-    print(c._prev2.data)
-    #c._backward[0]()
-    #var c = Value(data = 1.0, _backward = otro_fun, _children1 = List[a])
+    var c = a + b
+    print(c.data[])
+    var d = c + Float32(3.0)
+    print(d.data[])
+    #print(c._prev1.data[])
