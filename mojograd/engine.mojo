@@ -82,6 +82,19 @@ struct Value(AnyType):
     fn __pow__(self, other: Float32) -> Value:
         var v = Value(other)
         return self.__pow__(v)
+
+    fn backward_pow(mut v: Value):
+        # This basically updates the grad
+        var vv = v
+        print("backward_pow")
+        vv.__print()
+
+        if len(v._prev1) == 1 and len(v._prev2) == 1:
+            var l = v._prev1[0][].grad[]
+            var r = v._prev2[0][].grad[]
+
+            v._prev1[0][].grad = ArcPointer[Float32](l + 
+                                      (r * l ** (r - 1) * vv.grad[]) )
     
     fn backward_add(mut v: Value):
         var vv = v
