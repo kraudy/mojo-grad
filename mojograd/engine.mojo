@@ -21,6 +21,7 @@ struct Value():
     var data: ArcPointer[Float32]
     var grad : ArcPointer[Float32]
 
+    # Maybe these two can be done in the same
     var _prev1 : List[ArcPointer[Value]]
     var _prev2 : List[ArcPointer[Value]]
     #var _prev  : Tuple[Self, Self]
@@ -67,7 +68,7 @@ struct Value():
                self.grad.__is__(other.data) and
                self._op.__is__(other._op)
     
-    fn build_topo(self, mut visited: List[ArcPointer[Value]], topo: List[ArcPointer[Value]]):
+    fn build_topo(self, mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
         var is_visited = Bool[](False)
         var size = Int[](len(visited))
 
@@ -76,19 +77,36 @@ struct Value():
                 is_visited = True
         
         if not is_visited:
-              #visited.append(ArcPointer[Value](self))
-              visited.append(self)
-              if len(self._prev1) == 1:
-                  var _children1 = self._prev1
-                  # Value.build_topo(_children1, visited, topo)
+            #visited.append(ArcPointer[Value](self))
+            visited.append(self)
+            if len(self._prev1) == 1:
+                var _children1 = self._prev1[0][]
+                if len(_children1._prev1) == 1:
+                    Value.build_topo(_children1, visited, topo)
+                else:
+                    return
+
+            if len(self._prev2) == 1:
+                var _children2 = self._prev2[0][]
+                if len(_children2._prev2) == 1:
+                    Value.build_topo(_children2, visited, topo)
+                else:
+                    return
+            
+            topo.append(self)
 
     
-    fn backward(self):
+    fn backward(mut self):
+        # Maybe this needs to be a pointer, we'll see
         var visited = List[ArcPointer[Value]]()
         var topo = List[ArcPointer[Value]]()
 
         # Maybe this fn can be defined here
         Value.build_topo(self, visited, topo)
+
+        self.grad = Float32(1.0)
+        #var reversed = List[ArcPointer[Value]](reversed(topo))
+        var reversed = reversed(topo)
     
     fn __print(self):
         print(self.data[])
