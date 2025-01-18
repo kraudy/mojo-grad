@@ -125,6 +125,9 @@ struct Value(AnyType):
         if op == '+':
             print("Option found")
             Value.backward_add(v)
+        if op == '**':
+            print("Option **")
+            Value.backward_pow(v)
         else:
             print("OP not suported")
     
