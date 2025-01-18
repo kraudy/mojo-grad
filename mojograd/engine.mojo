@@ -17,7 +17,8 @@ fn otro_fun ():
 @value # Understand what this does
 #struct Value(CollectionElement, Writable, Stringable): # These two gives error
 #struct Value(CollectionElement): # Understand what this does
-struct Value():
+# Validates if AnyTypes behaves correlty
+struct Value(AnyType):
     var data: ArcPointer[Float32]
     var grad : ArcPointer[Float32]
 
@@ -49,6 +50,7 @@ struct Value():
     
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] + other.data[]))
+        # Maybe i can just append this
         out._prev1 = List[ArcPointer[Value]](self) 
         out._prev2 = List[ArcPointer[Value]](other) 
         out._op = ArcPointer[String]('+')
@@ -75,7 +77,16 @@ struct Value():
 
         if len(v._prev1) == 1:
             var _children1 = v._prev1[0][]
-            _children1.grad = ArcPointer[Float32](_children1.grad[] + vv.grad[])
+            print("_children1.grad = ", _children1.grad[], "vv.grad = ",vv.grad[])
+            #TODO: Valide which works
+            #_children1.grad = ArcPointer[Float32](_children1.grad[] + vv.grad[])
+            v._prev1[0][].grad = ArcPointer[Float32](_children1.grad[] + vv.grad[])
+            #v.grad = _children1.grad
+        
+        if len(v._prev2) == 1:
+            var _children2 = v._prev2[0][]
+            print("_children2.grad = ", _children2.grad[], "vv.grad = ",vv.grad[])
+            v._prev2[0][].grad = ArcPointer[Float32](_children2.grad[] + vv.grad[])
     
     fn _backward(mut v: Value):
         var op = String[](v._op[])
@@ -86,6 +97,7 @@ struct Value():
         v.__print()
 
         if op == '+':
+            print("Option found")
             Value.backward_add(v)
         else:
             print("OP not suported")
@@ -141,15 +153,15 @@ struct Value():
         #for ref in reversed_topo:
         for i in range(len(topo), -1, -1):
             #var v = ref[]
-            print(i)
-            print("Previous v = topo[i][]")
+            print("i: ", i)
+            # If there is no elements, this gives error, maybe use try catch
             var v = topo[i][]
-            print("Previous _backward")
+            print("Previous _backward: ")
             v.__print()
             Value._backward(v)
     
     fn __print(self):
-        print(self.data[])
+        print("data: ", self.data[], "grad: ", self.grad[])
     
             
 def main():
@@ -170,3 +182,7 @@ def main():
 
     # May god help us
     c.backward()
+    print("Resultado ====")
+    c.__print()
+    c._prev1[0][].__print()
+    c._prev2[0][].__print()
