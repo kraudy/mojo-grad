@@ -70,6 +70,19 @@ struct Value(AnyType):
                self.grad.__is__(other.data) and
                self._op.__is__(other._op)
     
+    fn __pow__(self, other : Value) -> Value:
+        var out = Value(data = (self.data[] ** other.data[])) 
+         # We need to add the previous nodes
+        out._prev1 = List[ArcPointer[Value]](self) 
+        out._prev2 = List[ArcPointer[Value]](other) 
+        out._op = ArcPointer[String]('**')
+
+        return out
+    
+    fn __pow__(self, other: Float32) -> Value:
+        var v = Value(other)
+        return self.__pow__(v)
+    
     fn backward_add(mut v: Value):
         var vv = v
         print("backward_add")
