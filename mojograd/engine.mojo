@@ -68,9 +68,33 @@ struct Value():
                self.grad.__is__(other.data) and
                self._op.__is__(other._op)
     
+    fn backward_add(mut v: Value):
+        var vv = v
+        print("backward_add")
+        vv.__print()
+
+        if len(v._prev1) == 1:
+            var _children1 = v._prev1[0][]
+            _children1.grad = ArcPointer[Float32](_children1.grad[] + vv.grad[])
+    
+    fn _backward(mut v: Value):
+        var op = String[](v._op[])
+        print("op")
+        print(op)
+
+        print("_backward")
+        v.__print()
+
+        if op == '+':
+            Value.backward_add(v)
+        else:
+            print("OP not suported")
+    
     fn build_topo(self, mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
         var is_visited = Bool[](False)
         var size = Int[](len(visited))
+
+        print("Build topo")
 
         for i in range(size):
             if self == visited[i][]:
@@ -78,22 +102,27 @@ struct Value():
         
         if not is_visited:
             #visited.append(ArcPointer[Value](self))
+            print("Entering visited")
             visited.append(self)
+            print(len(visited))
             if len(self._prev1) == 1:
+                print("Entered _prev1 == 1")
                 var _children1 = self._prev1[0][]
                 if len(_children1._prev1) == 1:
                     Value.build_topo(_children1, visited, topo)
-                else:
-                    return
+                #else:
+                #    return
 
             if len(self._prev2) == 1:
+                print("Entered _prev2 == 1")
                 var _children2 = self._prev2[0][]
                 if len(_children2._prev2) == 1:
                     Value.build_topo(_children2, visited, topo)
-                else:
-                    return
+                #else:
+                #    return
             
             topo.append(self)
+            print(len(topo))
 
     
     fn backward(mut self):
@@ -106,15 +135,23 @@ struct Value():
 
         self.grad = Float32(1.0)
         #var reversed = List[ArcPointer[Value]](reversed(topo))
-        var reversed = reversed(topo)
+        var reversed_topo = reversed(topo) # this returns an iterator
+
+        # Lets pray this thing works
+        #for ref in reversed_topo:
+        for i in range(len(topo), -1, -1):
+            #var v = ref[]
+            print(i)
+            print("Previous v = topo[i][]")
+            var v = topo[i][]
+            print("Previous _backward")
+            v.__print()
+            Value._backward(v)
     
     fn __print(self):
         print(self.data[])
     
             
-    
-
-
 def main():
     pass
     var a = Value(data = 1.0)
@@ -131,5 +168,5 @@ def main():
     #print(c._prev1.data[])
     c._prev1[0][].__print()
 
-    # May god help me
+    # May god help us
     c.backward()
