@@ -51,6 +51,7 @@ struct Value():
 
         out._prev2 = UnsafePointer[Value].alloc(1)
         out._prev2.init_pointee_move(other)
+        
         out._op = String('+')
 
         return out
@@ -70,8 +71,12 @@ struct Value():
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data ** other.data)) 
          # We need to add the previous nodes
+        out._prev1 = UnsafePointer[Value].alloc(1)
         out._prev1.init_pointee_move(self)
+
+        out._prev2 = UnsafePointer[Value].alloc(1)
         out._prev2.init_pointee_move(other) 
+
         out._op = String[]('**')
 
         return out
