@@ -84,6 +84,24 @@ struct Value():
     fn __pow__(self, other: Float32) -> Value:
         var v = Value(other)
         return self.__pow__(v)
+    
+    fn _backward(mut v: Value):
+        print("op")
+        print(v._op)
+
+        print("_backward")
+        v.__print()
+
+        if v._op == '+':
+            print("Option +")
+            #Value.backward_add(v)
+            return
+        if v._op == '**':
+            print("Option **")
+            #Value.backward_pow(v)
+            return
+        
+        print("OP not suported")
 
     @staticmethod
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
@@ -97,32 +115,34 @@ struct Value():
             if self == visited[i][]:
                 is_visited = True
         
-        if not is_visited:
-
-            print("Entering visited")
-            #visited.append(UnsafePointer.address_of(self))
-            visited.append(UnsafePointer.address_of(self))
-            print(len(visited))
-            if self._prev1 != UnsafePointer[Value]():
-                print("Entered _prev1 != UnsafePointer[Value]()")
-                var _children1 = self._prev1[]
-                print(_children1.data)
-                if _children1._prev1 != UnsafePointer[Value]():
-                    Value.build_topo(_children1, visited, topo)
-                #else:
-                #    return
-
-            if self._prev2 != UnsafePointer[Value]():
-                print("Entered _prev2 != UnsafePointer[Value]()")
-                var _children2 = self._prev2[]
-                print(_children2.data)
-                if _children2._prev2 != UnsafePointer[Value]():
-                    Value.build_topo(_children2, visited, topo)
-                #else:
-                #    return
+        #if not is_visited:
+        if is_visited:
+            return
             
-            topo.append(UnsafePointer[Value].address_of(self))
-            print(len(topo))
+        print("Entering visited")
+        #visited.append(UnsafePointer.address_of(self))
+        visited.append(UnsafePointer.address_of(self))
+        print(len(visited))
+        if self._prev1 != UnsafePointer[Value]():
+            print("Entered _prev1 != UnsafePointer[Value]()")
+            var _children1 = self._prev1[]
+            print(_children1.data)
+            if _children1._prev1 != UnsafePointer[Value]():
+                Value.build_topo(_children1, visited, topo)
+            #else:
+            #    return
+
+        if self._prev2 != UnsafePointer[Value]():
+            print("Entered _prev2 != UnsafePointer[Value]()")
+            var _children2 = self._prev2[]
+            print(_children2.data)
+            if _children2._prev2 != UnsafePointer[Value]():
+                Value.build_topo(_children2, visited, topo)
+            #else:
+            #    return
+        
+        topo.append(UnsafePointer[Value].address_of(self))
+        print(len(topo))
 
     fn backward(mut self):
         # Maybe this needs to be a pointer, we'll see
@@ -143,7 +163,7 @@ struct Value():
             print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             print(v[][].data) 
-            #Value._backward(v[][])
+            Value._backward(v[][])
     
     fn __print(self):
         print("data: ", self.data, "grad: ", self.grad)
