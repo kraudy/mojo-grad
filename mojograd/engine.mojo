@@ -193,7 +193,7 @@ struct Value(AnyType):
         print("data: ", self.data[], "grad: ", self.grad[])
     
             
-def main():
+fn main():
     pass
     var a = Value(data = 1.0)
     var b = Value(data = 2.0)
