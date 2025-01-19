@@ -84,6 +84,32 @@ struct Value():
     fn __pow__(self, other: Float32) -> Value:
         var v = Value(other)
         return self.__pow__(v)
+
+    fn backward(mut self):
+        # Maybe this needs to be a pointer, we'll see
+        var visited = List[UnsafePointer[Value]]()
+        var topo = List[UnsafePointer[Value]]()
+
+        # Maybe this fn can be defined here
+        #Value.build_topo(self, visited, topo)
+
+        self.grad = Float32(1.0)
+        #var reversed = List[ArcPointer[Value]](reversed(topo))
+        var reversed_topo = reversed(topo) # this returns an iterator
+
+        # Lets pray this thing works
+        #for ref in reversed_topo:
+        for i in range(len(topo), -1, -1):
+            #var v = ref[]
+            print("i: ", i)
+            # If there is no elements, this gives error, maybe use try catch
+            var v = topo[i][]
+            print("Previous _backward: ")
+            v.__print()
+            #Value._backward(v)
+    
+    fn __print(self):
+        print("data: ", self.data, "grad: ", self.grad)
     
 
     
