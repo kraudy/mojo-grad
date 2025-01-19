@@ -86,34 +86,32 @@ struct Value(AnyType):
         print("backward_pow")
         vv.__print()
 
-        if v._prev1 == UnsafePointer[Value]() and v._prev2 == UnsafePointer[Value]() :
-        #if len(v._prev1) == 1 and len(v._prev2) == 1:
-            var l = v._prev1[0][].grad[]
-            var r = v._prev2[0][].grad[]
+        if v._prev1 != UnsafePointer[Value]() and v._prev2 != UnsafePointer[Value]() :
+            var l = v._prev1[].grad
+            var r = v._prev2[].grad
 
-            v._prev1[0][].grad = ArcPointer[Float32](l + 
-                                      (r * l ** (r - 1) * vv.grad[]) )
+            v._prev1[0].grad = Float32[](l + (r * l ** (r - 1) * vv.grad) )
     
     fn backward_add(mut v: Value):
         var vv = v
         print("backward_add")
         vv.__print()
 
-        if len(v._prev1) == 1:
-            var _children1 = v._prev1[0][]
-            print("_children1.grad = ", _children1.grad[], "vv.grad = ",vv.grad[])
+        if v._prev1 != UnsafePointer[Value]():
+            var _children1 = v._prev1[]
+            print("_children1.grad = ", _children1.grad, "vv.grad = ",vv.grad)
             #TODO: Valide which works
             #_children1.grad = ArcPointer[Float32](_children1.grad[] + vv.grad[])
-            v._prev1[0][].grad = ArcPointer[Float32](_children1.grad[] + vv.grad[])
+            v._prev1[].grad = Float32[](_children1.grad + vv.grad)
             #v.grad = _children1.grad
         
-        if len(v._prev2) == 1:
-            var _children2 = v._prev2[0][]
-            print("_children2.grad = ", _children2.grad[], "vv.grad = ",vv.grad[])
-            v._prev2[0][].grad = ArcPointer[Float32](_children2.grad[] + vv.grad[])
+        if v._prev2 != UnsafePointer[Value]():
+            var _children2 = v._prev2[]
+            print("_children2.grad = ", _children2.grad, "vv.grad = ",vv.grad)
+            v._prev2[].grad = Float32[](_children2.grad + vv.grad)
     
     fn _backward(mut v: Value):
-        var op = String[](v._op[])
+        var op = String[](v._op)
         print("op")
         print(op)
 
@@ -144,18 +142,18 @@ struct Value(AnyType):
             print("Entering visited")
             visited.append(self)
             print(len(visited))
-            if len(self._prev1) == 1:
-                print("Entered _prev1 == 1")
-                var _children1 = self._prev1[0][]
-                if len(_children1._prev1) == 1:
+            if self._prev1 != UnsafePointer[Value]():
+                print("Entered _prev1 != UnsafePointer[Value]()")
+                var _children1 = self._prev1[]
+                if _children1._prev1 != UnsafePointer[Value]():
                     Value.build_topo(_children1, visited, topo)
                 #else:
                 #    return
 
-            if len(self._prev2) == 1:
-                print("Entered _prev2 == 1")
-                var _children2 = self._prev2[0][]
-                if len(_children2._prev2) == 1:
+            if self._prev2 != UnsafePointer[Value]():
+                print("Entered _prev2 != UnsafePointer[Value]()")
+                var _children2 = self._prev2[]
+                if _children2._prev2 != UnsafePointer[Value]():
                     Value.build_topo(_children2, visited, topo)
                 #else:
                 #    return
@@ -188,7 +186,7 @@ struct Value(AnyType):
             Value._backward(v)
     
     fn __print(self):
-        print("data: ", self.data[], "grad: ", self.grad[])
+        print("data: ", self.data, "grad: ", self.grad)
     
             
 def main():
@@ -201,18 +199,18 @@ def main():
 
         #var c = Value(data = 1.0, _backward = otro_fun, _children1 = a, _children2 = b)
         # Maybe i can add another function to the class to do this thing
-        print(c.data[])
+        print(c.data)
         var d = c + Float32(3.0)
-        print(d.data[])
+        print(d.data)
         #print(c._prev1.data[])
-        c._prev1[0][].__print()
+        c._prev1[].__print()
 
         # May god help us
         c.backward()
         print("Resultado ====")
         c.__print()
-        c._prev1[0][].__print()
-        c._prev2[0][].__print()
+        c._prev1[].__print()
+        c._prev2[].__print()
     finally:
         a._prev1.destroy_pointee()
         a._prev1.free()
