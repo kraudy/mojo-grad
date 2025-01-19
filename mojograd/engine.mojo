@@ -46,9 +46,12 @@ struct Value():
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data + other.data))
         # Maybe i can just append this
+        out._prev1 = UnsafePointer[Value].alloc(1)
         out._prev1.init_pointee_move(self)
+
+        out._prev2 = UnsafePointer[Value].alloc(1)
         out._prev2.init_pointee_move(other)
-        out._op = String[]('+')
+        out._op = String('+')
 
         return out
 
@@ -82,6 +85,11 @@ struct Value():
             
 fn main():
     var a = Value(data = 1.0)
+    var b = Value(data = 2.0)
+    var c = a + b
+    
+    # May god help us
+    #c.backward()
 
     if a._prev1 != UnsafePointer[Value]():
         a._prev1.destroy_pointee()
@@ -90,3 +98,19 @@ fn main():
     if a._prev2 != UnsafePointer[Value]():
         a._prev2.destroy_pointee()
         a._prev2.free()
+
+    if b._prev1 != UnsafePointer[Value]():
+        b._prev1.destroy_pointee()
+        b._prev1.free()
+    
+    if b._prev2 != UnsafePointer[Value]():
+        b._prev2.destroy_pointee()
+        b._prev2.free()
+
+    if c._prev1 != UnsafePointer[Value]():
+        c._prev1.destroy_pointee()
+        c._prev1.free()
+    
+    if c._prev2 != UnsafePointer[Value]():
+        c._prev2.destroy_pointee()
+        c._prev2.free()
