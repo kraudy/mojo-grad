@@ -16,13 +16,14 @@ struct Value():
     var _prev1 : UnsafePointer[Value]
     var _op : String
 
-    fn __init__(out self, data: Float32):
+    fn __init__(inout self, data: Float32):
         
         #self.data = UnsafePointer[Scalar[DType.float32]].alloc(1)
         self.data = Float32(data)
         self.grad = Float32(0)
 
 
+        #self._prev1 = UnsafePointer[Value]() 
         self._prev1 = UnsafePointer[Value]() 
 
         self._op = String('') 
@@ -33,5 +34,6 @@ struct Value():
 fn main():
     var a = Value(data = 1.0)
 
-    a._prev1.destroy_pointee()
-    a._prev1.free()
+    if a._prev1 != UnsafePointer[Value]():
+        a._prev1.destroy_pointee()
+        a._prev1.free()
