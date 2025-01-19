@@ -5,10 +5,6 @@ from memory import UnsafePointer, memset_zero, ArcPointer
 from memory import pointer
 
 
-# Understand what this does
-#struct Value(CollectionElement, Writable, Stringable): # These two gives error
-#struct Value(CollectionElement): # Understand what this does
-# Validates if AnyTypes behaves correlty
 struct Value():
     var data: Float32
     var grad : Float32
@@ -19,7 +15,6 @@ struct Value():
 
     fn __init__(inout self, data: Float32):
         
-        #self.data = UnsafePointer[Scalar[DType.float32]].alloc(1)
         self.data = Float32(data)
         self.grad = Float32(0)
 
@@ -45,7 +40,7 @@ struct Value():
 
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data + other.data))
-        # Maybe i can just append this
+
         out._prev1 = UnsafePointer[Value].alloc(1)
         out._prev1.init_pointee_move(self)
 
@@ -57,14 +52,11 @@ struct Value():
         return out
 
     fn __add__(self, other: Float32) -> Value:
-        # If the value passed is not Value
-        # This isa can be useful to accept multiples types on a paramete
+        # We are only making the conversion and reusing the value __add__ logic
         var v = Value(other)
-        # We are only making the conversion and reusing the value logic
         return self.__add__(v)
     
     fn __eq__(self, other: Self) -> Bool:
-        #return self is other
         return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
 
     
@@ -85,6 +77,22 @@ struct Value():
         var v = Value(other)
         return self.__pow__(v)
     
+    @staticmethod
+    fn backward_add(mut v: Value):
+        print("backward_add")
+        v.__print()
+
+        if v._prev1 != UnsafePointer[Value]():
+            var _children1 = v._prev1[]
+            print("_children1.grad = ", _children1.grad, "v.grad = ",v.grad)
+            v._prev1[].grad = _children1.grad + v.grad
+        
+        if v._prev2 != UnsafePointer[Value]():
+            var _children2 = v._prev2[]
+            print("_children2.grad = ", _children2.grad, "v.grad = ",v.grad)
+            v._prev2[].grad = _children2.grad + v.grad
+    
+    @staticmethod
     fn _backward(mut v: Value):
         print("op")
         print(v._op)
@@ -94,7 +102,7 @@ struct Value():
 
         if v._op == '+':
             print("Option +")
-            #Value.backward_add(v)
+            Value.backward_add(v)
             return
         if v._op == '**':
             print("Option **")
@@ -115,12 +123,10 @@ struct Value():
             if self == visited[i][]:
                 is_visited = True
         
-        #if not is_visited:
         if is_visited:
             return
             
-        print("Entering visited")
-        #visited.append(UnsafePointer.address_of(self))
+        print("Entering not visited")
         visited.append(UnsafePointer.address_of(self))
         print(len(visited))
         if self._prev1 != UnsafePointer[Value]():
@@ -129,8 +135,6 @@ struct Value():
             print(_children1.data)
             if _children1._prev1 != UnsafePointer[Value]():
                 Value.build_topo(_children1, visited, topo)
-            #else:
-            #    return
 
         if self._prev2 != UnsafePointer[Value]():
             print("Entered _prev2 != UnsafePointer[Value]()")
@@ -138,8 +142,6 @@ struct Value():
             print(_children2.data)
             if _children2._prev2 != UnsafePointer[Value]():
                 Value.build_topo(_children2, visited, topo)
-            #else:
-            #    return
         
         topo.append(UnsafePointer[Value].address_of(self))
         print(len(topo))
@@ -153,8 +155,6 @@ struct Value():
         print(len(topo))
         print(len(visited))
 
-
-        # Maybe this fn can be defined here
         Value.build_topo(self, visited, topo)
 
         self.grad = Float32(1.0)
@@ -174,9 +174,13 @@ fn main():
     var b = Value(data = 2.0)
     var c = a + b
     
-    # May god help us
-    
     c.backward()
+
+    # May god help us
+    var f = Value(data = 3.0)
+    var g = Value(data = 4.0)
+    var h = f + g
+    h.backward()
 
     if a._prev1 != UnsafePointer[Value]():
         a._prev1.destroy_pointee()
@@ -201,3 +205,27 @@ fn main():
     if c._prev2 != UnsafePointer[Value]():
         c._prev2.destroy_pointee()
         c._prev2.free()
+
+    if f._prev1 != UnsafePointer[Value]():
+        f._prev1.destroy_pointee()
+        f._prev1.free()
+    
+    if f._prev2 != UnsafePointer[Value]():
+        f._prev2.destroy_pointee()
+        f._prev2.free()
+
+    if g._prev1 != UnsafePointer[Value]():
+        g._prev1.destroy_pointee()
+        g._prev1.free()
+    
+    if g._prev2 != UnsafePointer[Value]():
+        g._prev2.destroy_pointee()
+        g._prev2.free()
+
+    if h._prev1 != UnsafePointer[Value]():
+        h._prev1.destroy_pointee()
+        h._prev1.free()
+    
+    if h._prev2 != UnsafePointer[Value]():
+        h._prev2.destroy_pointee()
+        h._prev2.free()
