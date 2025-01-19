@@ -85,42 +85,78 @@ struct Value():
         var v = Value(other)
         return self.__pow__(v)
 
+    @staticmethod
+    fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
+        var is_visited = Bool(False)
+
+        var size = Int(len(visited))
+
+        print("Build topo")
+
+        for i in range(size):
+            if self == visited[i][]:
+                is_visited = True
+        
+        if not is_visited:
+
+            print("Entering visited")
+            #visited.append(UnsafePointer.address_of(self))
+            visited.append(UnsafePointer.address_of(self))
+            print(len(visited))
+            if self._prev1 != UnsafePointer[Value]():
+                print("Entered _prev1 != UnsafePointer[Value]()")
+                var _children1 = self._prev1[]
+                print(_children1.data)
+                if _children1._prev1 != UnsafePointer[Value]():
+                    Value.build_topo(_children1, visited, topo)
+                #else:
+                #    return
+
+            if self._prev2 != UnsafePointer[Value]():
+                print("Entered _prev2 != UnsafePointer[Value]()")
+                var _children2 = self._prev2[]
+                print(_children2.data)
+                if _children2._prev2 != UnsafePointer[Value]():
+                    Value.build_topo(_children2, visited, topo)
+                #else:
+                #    return
+            
+            topo.append(UnsafePointer[Value].address_of(self))
+            print(len(topo))
+
     fn backward(mut self):
         # Maybe this needs to be a pointer, we'll see
         var visited = List[UnsafePointer[Value]]()
         var topo = List[UnsafePointer[Value]]()
 
+        print("previo a topo")
+        print(len(topo))
+        print(len(visited))
+
+
         # Maybe this fn can be defined here
-        #Value.build_topo(self, visited, topo)
+        Value.build_topo(self, visited, topo)
 
         self.grad = Float32(1.0)
-        #var reversed = List[ArcPointer[Value]](reversed(topo))
-        var reversed_topo = reversed(topo) # this returns an iterator
 
-        # Lets pray this thing works
-        #for ref in reversed_topo:
-        for i in range(len(topo), -1, -1):
-            #var v = ref[]
-            print("i: ", i)
-            # If there is no elements, this gives error, maybe use try catch
-            var v = topo[i][]
-            print("Previous _backward: ")
-            v.__print()
-            #Value._backward(v)
+        for v in reversed(topo):
+            print("for reversed")
+            # Note the double [] needed, the first for the iterator and the second for the pointer
+            print(v[][].data) 
+            #Value._backward(v[][])
     
     fn __print(self):
         print("data: ", self.data, "grad: ", self.grad)
     
-
-    
-            
+        
 fn main():
     var a = Value(data = 1.0)
     var b = Value(data = 2.0)
     var c = a + b
     
     # May god help us
-    #c.backward()
+    
+    c.backward()
 
     if a._prev1 != UnsafePointer[Value]():
         a._prev1.destroy_pointee()
