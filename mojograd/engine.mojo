@@ -19,26 +19,24 @@ fn otro_fun ():
 #struct Value(CollectionElement): # Understand what this does
 # Validates if AnyTypes behaves correlty
 struct Value(AnyType):
-    var data: ArcPointer[Float32]
-    var grad : ArcPointer[Float32]
+    var data: Float32[]
+    var grad : Float32[]
 
-    # Maybe these two can be done in the same
-    var _prev1 : List[ArcPointer[Value]]
-    var _prev2 : List[ArcPointer[Value]]
-    #var _prev  : Tuple[Self, Self]
-    var _op : ArcPointer[String]
+    var _prev1 : UnsafePointer[Value]
+    var _prev2 : UnsafePointer[Value]
+    var _op : String[]
 
     fn __init__(out self, data: Float32):
         
         #self.data = UnsafePointer[Scalar[DType.float32]].alloc(1)
-        self.data = ArcPointer[Float32](data)
-        self.grad = ArcPointer[Float32](0)
+        self.data = Float32[](data)
+        self.grad = Float32[](0)
 
 
-        self._prev1 = List[ArcPointer[Value]]() 
-        self._prev2 = List[ArcPointer[Value]]() 
+        self._prev1 = UnsafePointer[Value]() 
+        self._prev2 = UnsafePointer[Value]() 
 
-        self._op = ArcPointer[String]('') 
+        self._op = String[]('') 
     
 
     fn __moveinit__(out self, owned existing: Self):
@@ -49,11 +47,11 @@ struct Value(AnyType):
         self._op = existing._op
     
     fn __add__(self, other: Value) -> Value:
-        var out = Value(data = (self.data[] + other.data[]))
+        var out = Value(data = (self.data + other.data))
         # Maybe i can just append this
-        out._prev1 = List[ArcPointer[Value]](self) 
-        out._prev2 = List[ArcPointer[Value]](other) 
-        out._op = ArcPointer[String]('+')
+        out._prev1.init_pointee_move(self)
+        out._prev2.init_pointee_move(other)
+        out._op = String[]('+')
 
         return out
 
@@ -66,16 +64,15 @@ struct Value(AnyType):
     
     fn __eq__(self, other: Self) -> Bool:
         #return self is other
-        return self.data.__is__(other.data) and
-               self.grad.__is__(other.data) and
-               self._op.__is__(other._op)
+        return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
+
     
     fn __pow__(self, other : Value) -> Value:
-        var out = Value(data = (self.data[] ** other.data[])) 
+        var out = Value(data = (self.data ** other.data)) 
          # We need to add the previous nodes
-        out._prev1 = List[ArcPointer[Value]](self) 
-        out._prev2 = List[ArcPointer[Value]](other) 
-        out._op = ArcPointer[String]('**')
+        out._prev1.init_pointee_move(self)
+        out._prev2.init_pointee_move(other) 
+        out._op = String[]('**')
 
         return out
     
@@ -89,7 +86,8 @@ struct Value(AnyType):
         print("backward_pow")
         vv.__print()
 
-        if len(v._prev1) == 1 and len(v._prev2) == 1:
+        if v._prev1 == UnsafePointer[Value]() and v._prev2 == UnsafePointer[Value]() :
+        #if len(v._prev1) == 1 and len(v._prev2) == 1:
             var l = v._prev1[0][].grad[]
             var r = v._prev2[0][].grad[]
 
@@ -194,24 +192,39 @@ struct Value(AnyType):
     
             
 def main():
-    pass
     var a = Value(data = 1.0)
     var b = Value(data = 2.0)
-    a.__print()
-    #print(a.data[])
-
-    #var c = Value(data = 1.0, _backward = otro_fun, _children1 = a, _children2 = b)
-    # Maybe i can add another function to the class to do this thing
     var c = a + b
-    print(c.data[])
-    var d = c + Float32(3.0)
-    print(d.data[])
-    #print(c._prev1.data[])
-    c._prev1[0][].__print()
+    try:
+        a.__print()
+        #print(a.data[])
 
-    # May god help us
-    c.backward()
-    print("Resultado ====")
-    c.__print()
-    c._prev1[0][].__print()
-    c._prev2[0][].__print()
+        #var c = Value(data = 1.0, _backward = otro_fun, _children1 = a, _children2 = b)
+        # Maybe i can add another function to the class to do this thing
+        print(c.data[])
+        var d = c + Float32(3.0)
+        print(d.data[])
+        #print(c._prev1.data[])
+        c._prev1[0][].__print()
+
+        # May god help us
+        c.backward()
+        print("Resultado ====")
+        c.__print()
+        c._prev1[0][].__print()
+        c._prev2[0][].__print()
+    finally:
+        a._prev1.destroy_pointee()
+        a._prev1.free()
+        a._prev2.destroy_pointee()
+        a._prev2.free()
+
+        b._prev1.destroy_pointee()
+        b._prev1.free()
+        b._prev2.destroy_pointee()
+        b._prev2.free()
+
+        c._prev1.destroy_pointee()
+        c._prev1.free()
+        c._prev2.destroy_pointee()
+        c._prev2.free()
