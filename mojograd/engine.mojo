@@ -69,13 +69,25 @@ struct Value():
         out._prev2 = UnsafePointer[Value].alloc(1)
         out._prev2.init_pointee_move(other) 
 
-        out._op = String[]('**')
+        out._op = String('**')
 
         return out
     
     fn __pow__(self, other: Float32) -> Value:
         var v = Value(other)
         return self.__pow__(v)
+    
+    @staticmethod
+    fn backward_pow(mut v: Value):
+        print("backward_pow")
+        v.__print()
+
+        if v._prev1 == UnsafePointer[Value]() or v._prev2 == UnsafePointer[Value]():
+            return
+        
+        v._prev1[].grad = (v._prev1[].grad 
+                    + (v._prev2[].data * v._prev1[].data ** (v._prev2[].data - 1) * v._prev2[].grad ))
+        
     
     @staticmethod
     fn backward_add(mut v: Value):
@@ -106,13 +118,16 @@ struct Value():
             return
         if v._op == '**':
             print("Option **")
-            #Value.backward_pow(v)
+            Value.backward_pow(v)
             return
         
         print("OP not suported")
 
     @staticmethod
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
+        if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
+            return
+
         var is_visited = Bool(False)
 
         var size = Int(len(visited))
@@ -161,26 +176,34 @@ struct Value():
 
         for v in reversed(topo):
             print("for reversed")
+            print(len(topo))
             # Note the double [] needed, the first for the iterator and the second for the pointer
-            print(v[][].data) 
+            v[][].__print()
             Value._backward(v[][])
     
     fn __print(self):
-        print("data: ", self.data, "grad: ", self.grad)
+        print("data: ", self.data, "grad: ", self.grad, "Op: ", self._op)
     
         
 fn main():
-    var a = Value(data = 1.0)
-    var b = Value(data = 2.0)
-    var c = a + b
+    var a = Value(data = 2.0)
+    var b = Value(data = 3.0)
+    var c = Float32(2.0)
+    var d = b ** c
+    var e = a + c
     
-    c.backward()
+    e.backward()
+
+    a.__print()
+    b.__print()
+    d.__print()
+    e.__print()
 
     # May god help us
-    var f = Value(data = 3.0)
-    var g = Value(data = 4.0)
-    var h = f + g
-    h.backward()
+    #var f = Value(data = 3.0)
+    #var g = Value(data = 4.0)
+    #var h = f + g
+    #h.backward()
 
     if a._prev1 != UnsafePointer[Value]():
         a._prev1.destroy_pointee()
@@ -198,34 +221,26 @@ fn main():
         b._prev2.destroy_pointee()
         b._prev2.free()
 
-    if c._prev1 != UnsafePointer[Value]():
-        c._prev1.destroy_pointee()
-        c._prev1.free()
+    if d._prev1 != UnsafePointer[Value]():
+        d._prev1.destroy_pointee()
+        d._prev1.free()
     
-    if c._prev2 != UnsafePointer[Value]():
-        c._prev2.destroy_pointee()
-        c._prev2.free()
+    if d._prev2 != UnsafePointer[Value]():
+        d._prev2.destroy_pointee()
+        d._prev2.free()
 
-    if f._prev1 != UnsafePointer[Value]():
-        f._prev1.destroy_pointee()
-        f._prev1.free()
+    if e._prev1 != UnsafePointer[Value]():
+        e._prev1.destroy_pointee()
+        e._prev1.free()
     
-    if f._prev2 != UnsafePointer[Value]():
-        f._prev2.destroy_pointee()
-        f._prev2.free()
+    if e._prev2 != UnsafePointer[Value]():
+        e._prev2.destroy_pointee()
+        e._prev2.free()
 
-    if g._prev1 != UnsafePointer[Value]():
-        g._prev1.destroy_pointee()
-        g._prev1.free()
-    
-    if g._prev2 != UnsafePointer[Value]():
-        g._prev2.destroy_pointee()
-        g._prev2.free()
-
-    if h._prev1 != UnsafePointer[Value]():
-        h._prev1.destroy_pointee()
-        h._prev1.free()
-    
-    if h._prev2 != UnsafePointer[Value]():
-        h._prev2.destroy_pointee()
-        h._prev2.free()
+    #if h._prev1 != UnsafePointer[Value]():
+    #    h._prev1.destroy_pointee()
+    #    h._prev1.free()
+    #
+    #if h._prev2 != UnsafePointer[Value]():
+    #    h._prev2.destroy_pointee()
+    #    h._prev2.free()
