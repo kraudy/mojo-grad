@@ -4,11 +4,14 @@ from collections import Optional, List, Dict, InlineList
 from memory import UnsafePointer, memset_zero, ArcPointer
 from memory import pointer
 
+# Validate alias : fn() escaping -> None, alignment=1
 
 struct Value():
     var data: Float32
     var grad : Float32
 
+    var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
+    # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
     var _prev1 : UnsafePointer[Value]
     var _prev2 : UnsafePointer[Value]
     var _op : String
@@ -18,15 +21,17 @@ struct Value():
         self.data = Float32(data)
         self.grad = Float32(0)
 
-
+        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev1 = UnsafePointer[Value]() 
         self._prev2 = UnsafePointer[Value]() 
 
         self._op = String('') 
 
     fn __moveinit__(out self, owned existing: Self):
+        # Validate ^
         self.data = existing.data
         self.grad = existing.grad
+        self._func = existing._func
         self._prev1 = existing._prev1
         self._prev2 = existing._prev2
         self._op = existing._op
@@ -34,6 +39,7 @@ struct Value():
     fn __copyinit__(out self, existing: Self):
         self.data = existing.data
         self.grad = existing.grad
+        self._func = existing._func
         self._prev1 = existing._prev1
         self._prev2 = existing._prev2
         self._op = existing._op
@@ -42,12 +48,26 @@ struct Value():
         var out = Value(data = (self.data + other.data))
 
         out._prev1 = UnsafePointer[Value].alloc(1)
-        out._prev1.init_pointee_move(self)
+        out._prev1.init_pointee_copy(self)
 
         out._prev2 = UnsafePointer[Value].alloc(1)
-        out._prev2.init_pointee_move(other)
+        out._prev2.init_pointee_copy(other)
         
         out._op = String('+')
+
+        fn _backward() -> None:
+            print("Trying _backward")
+            var out_grad = out.grad
+            print("out_grad: ", out_grad)
+            var _self = UnsafePointer[Value].address_of(self) 
+            var _other = UnsafePointer[Value].address_of(other)
+            _self[].grad += out_grad
+            _other[].grad += out_grad
+        
+        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
+
+        # Validate ^
+        out._func.init_pointee_move(_backward)
 
         return out
 
@@ -64,10 +84,10 @@ struct Value():
         var out = Value(data = (self.data ** other.data)) 
          # We need to add the previous nodes
         out._prev1 = UnsafePointer[Value].alloc(1)
-        out._prev1.init_pointee_move(self)
+        out._prev1.init_pointee_copy(self)
 
         out._prev2 = UnsafePointer[Value].alloc(1)
-        out._prev2.init_pointee_move(other) 
+        out._prev2.init_pointee_copy(other) 
 
         out._op = String('**')
 
@@ -124,6 +144,7 @@ struct Value():
         print("OP not suported")
 
     @staticmethod
+    # Validate UnsafePointer[List[UnsafePointer[Value]]]
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
         if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
             return
@@ -198,6 +219,41 @@ fn main():
     b.__print()
     d.__print()
     e.__print()
+
+    try:
+        e._func[]()
+    finally:
+        if a._prev1 != UnsafePointer[Value]():
+            a._prev1.destroy_pointee()
+            a._prev1.free()
+        
+        if a._prev2 != UnsafePointer[Value]():
+            a._prev2.destroy_pointee()
+            a._prev2.free()
+
+        if b._prev1 != UnsafePointer[Value]():
+            b._prev1.destroy_pointee()
+            b._prev1.free()
+        
+        if b._prev2 != UnsafePointer[Value]():
+            b._prev2.destroy_pointee()
+            b._prev2.free()
+
+        if d._prev1 != UnsafePointer[Value]():
+            d._prev1.destroy_pointee()
+            d._prev1.free()
+        
+        if d._prev2 != UnsafePointer[Value]():
+            d._prev2.destroy_pointee()
+            d._prev2.free()
+
+        if e._prev1 != UnsafePointer[Value]():
+            e._prev1.destroy_pointee()
+            e._prev1.free()
+        
+        if e._prev2 != UnsafePointer[Value]():
+            e._prev2.destroy_pointee()
+            e._prev2.free() 
 
     # May god help us
     #var f = Value(data = 3.0)
