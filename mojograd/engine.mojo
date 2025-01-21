@@ -82,7 +82,8 @@ struct Value():
     
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data ** other.data)) 
-         # We need to add the previous nodes
+        # We need to add the previous nodes
+        # Validate if these _prev assignations are needed, seems like not
         out._prev1 = UnsafePointer[Value].alloc(1)
         out._prev1.init_pointee_copy(self)
 
@@ -90,6 +91,19 @@ struct Value():
         out._prev2.init_pointee_copy(other) 
 
         out._op = String('**')
+
+        fn _backward() -> None:
+            print("Trying _backward pow")
+            var out_grad = out.grad
+            print("out_grad: ", out_grad)
+            var _self = UnsafePointer[Value].address_of(self) 
+            var _other = UnsafePointer[Value].address_of(other)
+            _self[].grad += (_other[].data * _self[].data ** (_other[].data - 1)) *  out_grad # Validate this out_grad
+        
+        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
+
+        # Validate ^
+        out._func.init_pointee_move(_backward)
 
         return out
     
@@ -221,6 +235,7 @@ fn main():
     e.__print()
 
     try:
+        d._func[]()
         e._func[]()
     finally:
         if a._prev1 != UnsafePointer[Value]():
