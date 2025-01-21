@@ -75,6 +75,39 @@ struct Value():
         # We are only making the conversion and reusing the value __add__ logic
         var v = Value(other)
         return self.__add__(v)
+
+    fn __mul__(self, other: Value) -> Value:
+        # TODO: I can overrite this __init__ to accept _prev1 and _prev2 and auto initialize them directly, remember @implicit
+        var out = Value(data = (self.data + other.data))
+
+        out._prev1 = UnsafePointer[Value].alloc(1)
+        out._prev1.init_pointee_copy(self)
+
+        out._prev2 = UnsafePointer[Value].alloc(1)
+        out._prev2.init_pointee_copy(other)
+        
+        out._op = String('*')
+
+        fn _backward() -> None:
+            print("Trying _backward mul")
+            var out_grad = out.grad
+            print("out_grad: ", out_grad)
+            var _self = UnsafePointer[Value].address_of(self) 
+            var _other = UnsafePointer[Value].address_of(other)
+            _self[].grad += _other[].data * out_grad
+            _other[].grad += _self[].data * out_grad
+        
+        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
+
+        # Validate ^
+        out._func.init_pointee_move(_backward)
+
+        return out
+
+    fn __mul__(self, other: Float32) -> Value:
+        # We are only making the conversion and reusing the value __mul__ logic
+        var v = Value(other)
+        return self.__mul__(v)
     
     fn __eq__(self, other: Self) -> Bool:
         return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
