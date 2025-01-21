@@ -56,7 +56,7 @@ struct Value():
         out._op = String('+')
 
         fn _backward() -> None:
-            print("Trying _backward")
+            print("Trying _backward add")
             var out_grad = out.grad
             print("out_grad: ", out_grad)
             var _self = UnsafePointer[Value].address_of(self) 
@@ -110,52 +110,6 @@ struct Value():
     fn __pow__(self, other: Float32) -> Value:
         var v = Value(other)
         return self.__pow__(v)
-    
-    @staticmethod
-    fn backward_pow(mut v: Value):
-        print("backward_pow")
-        v.__print()
-
-        if v._prev1 == UnsafePointer[Value]() or v._prev2 == UnsafePointer[Value]():
-            return
-        
-        v._prev1[].grad = (v._prev1[].grad 
-                    + (v._prev2[].data * v._prev1[].data ** (v._prev2[].data - 1) * v._prev2[].grad ))
-        
-    
-    @staticmethod
-    fn backward_add(mut v: Value):
-        print("backward_add")
-        v.__print()
-
-        if v._prev1 != UnsafePointer[Value]():
-            var _children1 = v._prev1[]
-            print("_children1.grad = ", _children1.grad, "v.grad = ",v.grad)
-            v._prev1[].grad = _children1.grad + v.grad
-        
-        if v._prev2 != UnsafePointer[Value]():
-            var _children2 = v._prev2[]
-            print("_children2.grad = ", _children2.grad, "v.grad = ",v.grad)
-            v._prev2[].grad = _children2.grad + v.grad
-    
-    @staticmethod
-    fn _backward(mut v: Value):
-        print("op")
-        print(v._op)
-
-        print("_backward")
-        v.__print()
-
-        if v._op == '+':
-            print("Option +")
-            Value.backward_add(v)
-            return
-        if v._op == '**':
-            print("Option **")
-            Value.backward_pow(v)
-            return
-        
-        print("OP not suported")
 
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
@@ -201,7 +155,7 @@ struct Value():
         var visited = List[UnsafePointer[Value]]()
         var topo = List[UnsafePointer[Value]]()
 
-        print("previo a topo")
+        print("previous topo")
         print(len(topo))
         print(len(visited))
 
@@ -213,8 +167,9 @@ struct Value():
             print("for reversed")
             print(len(topo))
             # Note the double [] needed, the first for the iterator and the second for the pointer
+            v[][]._func[]()
             v[][].__print()
-            Value._backward(v[][])
+
     
     fn __print(self):
         print("data: ", self.data, "grad: ", self.grad, "Op: ", self._op)
@@ -227,16 +182,13 @@ fn main():
     var d = b ** c
     var e = a + c
     
-    e.backward()
-
-    a.__print()
-    b.__print()
-    d.__print()
-    e.__print()
-
     try:
-        d._func[]()
-        e._func[]()
+        e.backward()
+
+        a.__print()
+        b.__print()
+        d.__print()
+        e.__print()
     finally:
         if a._prev1 != UnsafePointer[Value]():
             a._prev1.destroy_pointee()
@@ -270,11 +222,6 @@ fn main():
             e._prev2.destroy_pointee()
             e._prev2.free() 
 
-    # May god help us
-    #var f = Value(data = 3.0)
-    #var g = Value(data = 4.0)
-    #var h = f + g
-    #h.backward()
 
     if a._prev1 != UnsafePointer[Value]():
         a._prev1.destroy_pointee()
@@ -307,11 +254,3 @@ fn main():
     if e._prev2 != UnsafePointer[Value]():
         e._prev2.destroy_pointee()
         e._prev2.free()
-
-    #if h._prev1 != UnsafePointer[Value]():
-    #    h._prev1.destroy_pointee()
-    #    h._prev1.free()
-    #
-    #if h._prev2 != UnsafePointer[Value]():
-    #    h._prev2.destroy_pointee()
-    #    h._prev2.free()
