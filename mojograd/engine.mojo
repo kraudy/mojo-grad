@@ -1,6 +1,6 @@
 """  """
 
-from collections import Optional, List, Dict, InlineList
+from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer
 from memory import pointer
 
@@ -12,6 +12,7 @@ struct Value():
 
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
+    # var _prev :  Set[Value]
     var _prev1 : UnsafePointer[Value]
     var _prev2 : UnsafePointer[Value]
     var _op : String
@@ -27,10 +28,40 @@ struct Value():
 
         self._op = String('') 
 
+    fn __init__(inout self, data: Float32, prev1: Value, op: String):
+        
+        self.data = Float32(data)
+        self.grad = Float32(0)
+
+        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+
+        self._prev1 = UnsafePointer[Value].alloc(1)
+        self._prev1.init_pointee_copy(prev1)
+
+        self._prev2 = UnsafePointer[Value]() 
+
+        self._op = op
+
+    fn __init__(inout self, data: Float32, prev1: Value, prev2: Value, op: String):
+        
+        self.data = Float32(data)
+        self.grad = Float32(0)
+
+        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+
+        self._prev1 = UnsafePointer[Value].alloc(1)
+        self._prev1.init_pointee_copy(prev1)
+
+        self._prev2 = UnsafePointer[Value].alloc(1)
+        self._prev2.init_pointee_copy(prev2)
+
+        self._op = op
+
     fn __moveinit__(out self, owned existing: Self):
         # Validate ^
         self.data = existing.data
         self.grad = existing.grad
+        # Validate
         self._func = existing._func
         self._prev1 = existing._prev1
         self._prev2 = existing._prev2
@@ -39,6 +70,7 @@ struct Value():
     fn __copyinit__(out self, existing: Self):
         self.data = existing.data
         self.grad = existing.grad
+        # Validate
         self._func = existing._func
         self._prev1 = existing._prev1
         self._prev2 = existing._prev2
@@ -148,6 +180,12 @@ struct Value():
     fn relu(self) -> Value:
         out = Value(0 if self.data < 0 else self.data)
 
+        # This should be done in the __init__
+        out._prev1 = UnsafePointer[Value].alloc(1)
+        out._prev1.init_pointee_copy(self)
+
+        out._op = String('ReLu')
+
         fn _backward():
             # TODO: Overwrite __init__ to add _op
             var _out = UnsafePointer[Value].address_of(out)
@@ -163,7 +201,7 @@ struct Value():
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
-      
+
         if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
             return
 
