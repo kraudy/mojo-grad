@@ -100,12 +100,21 @@ struct Value():
         var v = Value(other)
         return self.__add__(v)
     
+    fn __radd__(self, other: Float32) -> Value:
+        return self.__add__(other)
+
+    fn __neg__(self) -> Value:
+        return self.__mul__(-1.0)
+
     fn __iadd__ (inout self, other: Value):
-        self.data += other.data
+        #self.data += other.data
+        var out = self.__add__(other)
+        self = out
         
     fn __iadd__ (inout self, other: Float32):
         # check if prev1 needs to be assigned
-        self.data += other 
+        var out = self.__add__(other)
+        self = out
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
@@ -315,8 +324,8 @@ fn main():
         c2 = a2 + b2
         d2 = a2 * b2 + b2**3
         c2 += c2 + 1
-
-        #d = a * b + b**3
+        c2 += 1 + c2 + (-a2)
+        #d2 += d2 * 2 + (b2 + a2).relu()
 
         if a2._prev1 != UnsafePointer[Value]():
             a2._prev1.destroy_pointee()
