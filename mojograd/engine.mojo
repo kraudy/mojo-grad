@@ -77,15 +77,7 @@ struct Value():
         self._op = existing._op
 
     fn __add__(self, other: Value) -> Value:
-        var out = Value(data = (self.data + other.data))
-
-        out._prev1 = UnsafePointer[Value].alloc(1)
-        out._prev1.init_pointee_copy(self)
-
-        out._prev2 = UnsafePointer[Value].alloc(1)
-        out._prev2.init_pointee_copy(other)
-        
-        out._op = String('+')
+        var out = Value(data = (self.data + other.data), prev1 = self, prev2 = other, op = '+')
 
         fn _backward() -> None:
             print("Trying _backward add")
@@ -109,16 +101,7 @@ struct Value():
         return self.__add__(v)
 
     fn __mul__(self, other: Value) -> Value:
-        # TODO: I can overrite this __init__ to accept _prev1 and _prev2 and auto initialize them directly, remember @implicit
-        var out = Value(data = (self.data + other.data))
-
-        out._prev1 = UnsafePointer[Value].alloc(1)
-        out._prev1.init_pointee_copy(self)
-
-        out._prev2 = UnsafePointer[Value].alloc(1)
-        out._prev2.init_pointee_copy(other)
-        
-        out._op = String('*')
+        var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
 
         fn _backward() -> None:
             print("Trying _backward mul")
@@ -146,16 +129,7 @@ struct Value():
 
     
     fn __pow__(self, other : Value) -> Value:
-        var out = Value(data = (self.data ** other.data)) 
-        # We need to add the previous nodes
-        # Validate if these _prev assignations are needed, seems like not
-        out._prev1 = UnsafePointer[Value].alloc(1)
-        out._prev1.init_pointee_copy(self)
-
-        out._prev2 = UnsafePointer[Value].alloc(1)
-        out._prev2.init_pointee_copy(other) 
-
-        out._op = String('**')
+        var out = Value(data = (self.data ** other.data), prev1 = self, prev2 = other, op = '**')
 
         fn _backward() -> None:
             print("Trying _backward pow")
@@ -176,18 +150,10 @@ struct Value():
         var v = Value(other)
         return self.__pow__(v)
 
-    # Add relu
     fn relu(self) -> Value:
-        out = Value(0 if self.data < 0 else self.data)
-
-        # This should be done in the __init__
-        out._prev1 = UnsafePointer[Value].alloc(1)
-        out._prev1.init_pointee_copy(self)
-
-        out._op = String('ReLu')
+        var out = Value(data = (Float32(0) if self.data < 0 else self.data), prev1 = self, op = 'ReLu')
 
         fn _backward():
-            # TODO: Overwrite __init__ to add _op
             var _out = UnsafePointer[Value].address_of(out)
             var _self = UnsafePointer[Value].address_of(self)
             _self[].grad += (Float32(0) if _self[].data < 0 else _self[].data) * _out[].grad
