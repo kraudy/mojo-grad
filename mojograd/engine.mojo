@@ -163,20 +163,13 @@ struct Value():
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
+      
         if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
             return
 
-        var is_visited = Bool(False)
-
-        var size = Int(len(visited))
-
         print("Build topo")
 
-        for i in range(size):
-            if self == visited[i][]:
-                is_visited = True
-        
-        if is_visited:
+        if UnsafePointer[Value].address_of(self) in visited:
             return
             
         print("Entering not visited")
