@@ -144,6 +144,22 @@ struct Value():
         var v = Value(other)
         return self.__pow__(v)
 
+    # Add relu
+    fn relu(self) -> Value:
+        out = Value(0 if self.data < 0 else self.data)
+
+        fn _backward():
+            # TODO: Overwrite __init__ to add _op
+            var _out = UnsafePointer[Value].address_of(out)
+            var _self = UnsafePointer[Value].address_of(self)
+            _self[].grad += (Float32(0) if _self[].data < 0 else _self[].data) * _out[].grad
+        
+        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
+      
+        out._func.init_pointee_move(_backward)
+        
+        return out
+
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
