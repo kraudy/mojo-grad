@@ -99,6 +99,13 @@ struct Value():
         # We are only making the conversion and reusing the value __add__ logic
         var v = Value(other)
         return self.__add__(v)
+    
+    fn __iadd__ (inout self, other: Value):
+        self.data += other.data
+        
+    fn __iadd__ (inout self, other: Float32):
+        # check if prev1 needs to be assigned
+        self.data += other 
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
@@ -222,20 +229,54 @@ struct Value():
     
         
 fn main():
-    var a = Value(data = 2.0)
-    var b = Value(data = 3.0)
-    var c = Float32(2.0)
-    var d = b ** c
-    var e = a + c
-    
-    try:
-        e.backward()
+    fn test1():
+        var a = Value(data = 2.0)
+        var b = Value(data = 3.0)
+        var c = Float32(2.0)
+        var d = b ** c
+        var e = a + c
+        
+        try:
+            e.backward()
 
-        a.__print()
-        b.__print()
-        d.__print()
-        e.__print()
-    finally:
+            a.__print()
+            b.__print()
+            d.__print()
+            e.__print()
+        finally:
+            if a._prev1 != UnsafePointer[Value]():
+                a._prev1.destroy_pointee()
+                a._prev1.free()
+            
+            if a._prev2 != UnsafePointer[Value]():
+                a._prev2.destroy_pointee()
+                a._prev2.free()
+
+            if b._prev1 != UnsafePointer[Value]():
+                b._prev1.destroy_pointee()
+                b._prev1.free()
+            
+            if b._prev2 != UnsafePointer[Value]():
+                b._prev2.destroy_pointee()
+                b._prev2.free()
+
+            if d._prev1 != UnsafePointer[Value]():
+                d._prev1.destroy_pointee()
+                d._prev1.free()
+            
+            if d._prev2 != UnsafePointer[Value]():
+                d._prev2.destroy_pointee()
+                d._prev2.free()
+
+            if e._prev1 != UnsafePointer[Value]():
+                e._prev1.destroy_pointee()
+                e._prev1.free()
+            
+            if e._prev2 != UnsafePointer[Value]():
+                e._prev2.destroy_pointee()
+                e._prev2.free() 
+
+
         if a._prev1 != UnsafePointer[Value]():
             a._prev1.destroy_pointee()
             a._prev1.free()
@@ -266,37 +307,32 @@ fn main():
         
         if e._prev2 != UnsafePointer[Value]():
             e._prev2.destroy_pointee()
-            e._prev2.free() 
-
-
-    if a._prev1 != UnsafePointer[Value]():
-        a._prev1.destroy_pointee()
-        a._prev1.free()
+            e._prev2.free()
     
-    if a._prev2 != UnsafePointer[Value]():
-        a._prev2.destroy_pointee()
-        a._prev2.free()
+    fn test2():
+        a2 = Value(4.0)
+        b2 = Value(2.0)
+        c2 = a2 + b2
+        d2 = a2 * b2 + b2**3
+        c2 += c2 + 1
 
-    if b._prev1 != UnsafePointer[Value]():
-        b._prev1.destroy_pointee()
-        b._prev1.free()
-    
-    if b._prev2 != UnsafePointer[Value]():
-        b._prev2.destroy_pointee()
-        b._prev2.free()
+        #d = a * b + b**3
 
-    if d._prev1 != UnsafePointer[Value]():
-        d._prev1.destroy_pointee()
-        d._prev1.free()
-    
-    if d._prev2 != UnsafePointer[Value]():
-        d._prev2.destroy_pointee()
-        d._prev2.free()
+        if a2._prev1 != UnsafePointer[Value]():
+            a2._prev1.destroy_pointee()
+            a2._prev1.free()
+        
+        if a2._prev2 != UnsafePointer[Value]():
+            a2._prev2.destroy_pointee()
+            a2._prev2.free()
 
-    if e._prev1 != UnsafePointer[Value]():
-        e._prev1.destroy_pointee()
-        e._prev1.free()
-    
-    if e._prev2 != UnsafePointer[Value]():
-        e._prev2.destroy_pointee()
-        e._prev2.free()
+        if b2._prev1 != UnsafePointer[Value]():
+            b2._prev1.destroy_pointee()
+            b2._prev1.free()
+        
+        if b2._prev2 != UnsafePointer[Value]():
+            b2._prev2.destroy_pointee()
+            b2._prev2.free()
+
+    #test1()
+    test2()
