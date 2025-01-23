@@ -112,9 +112,17 @@ struct Value():
         self = out
         
     fn __iadd__ (inout self, other: Float32):
-        # check if prev1 needs to be assigned
         var out = self.__add__(other)
         self = out
+    
+    fn __sub__(self, other: Value) -> Value:
+        return self.__add__(- other)
+
+    fn __sub__(self, other: Float32) -> Value:
+        return self.__add__(- other)
+
+    fn __rsub__(self, other: Float32) -> Value:
+        return self.__add__(- other)
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
@@ -185,6 +193,7 @@ struct Value():
 
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
+    #         Validate inout                               Validate inout
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
 
         if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
