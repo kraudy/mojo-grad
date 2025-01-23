@@ -124,6 +124,15 @@ struct Value():
     fn __rsub__(self, other: Float32) -> Value:
         return self.__add__(- other)
 
+    fn __truediv__(self, other: Value) -> Value:
+        return self * other ** -1
+
+    fn __truediv__(self, other: Float32) -> Value:
+        return self * other ** -1
+
+    fn __rtruediv__(self, other: Float32) -> Value:
+        return self * other ** -1
+
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
 
@@ -295,11 +304,17 @@ fn main():
         c2 += 1 + c2 + (-a2)
         d2 += d2 * 2 + (b2 + a2).relu()
         d2 += 3 * d2 + (b2 - a2).relu()
+        e2 = c2 - d2
+        f2 = e2**2
+        g2 = f2 / 2.0
 
         a2.destroy()
         b2.destroy() 
         c2.destroy()
         d2.destroy()
+        e2.destroy()
+        f2.destroy()
+        g2.destroy()
 
     #test1()
     test2()
