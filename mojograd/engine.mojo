@@ -107,12 +107,12 @@ struct Value():
         return self.__mul__(-1.0)
 
     fn __iadd__ (inout self, other: Value):
-        #self.data += other.data
         var out = self.__add__(other)
-        self = out
+        self = other
         
     fn __iadd__ (inout self, other: Float32):
         var out = self.__add__(other)
+        #self = out
         self = out
     
     fn __sub__(self, other: Value) -> Value:
@@ -298,15 +298,23 @@ fn main():
     fn test2():
         a2 = Value(4.0)
         b2 = Value(2.0)
-        c2 = a2 + b2
-        d2 = a2 * b2 + b2**3
-        c2 += c2 + 1
-        c2 += 1 + c2 + (-a2)
-        d2 += d2 * 2 + (b2 + a2).relu()
+        c2 = a2 + b2 # 6
+        d2 = a2 * b2 + b2**3 # 16
+        c2 += c2 + 1 # 7
+        c2 += 1 + c2 + (-a2) # 4
+        #     16 * 2 + (2 + 4)
+        d2 += d2 * 2 + (b2 + a2).relu() # 38
         d2 += 3 * d2 + (b2 - a2).relu()
+        d2.__print()
         e2 = c2 - d2
+        e2.__print()
         f2 = e2**2
+        f2.__print()
         g2 = f2 / 2.0
+        g2.__print()
+        g2 += 10.0 / f2
+
+        g2.__print()
 
         a2.destroy()
         b2.destroy() 
