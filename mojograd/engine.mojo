@@ -140,6 +140,9 @@ struct Value():
         var v = Value(other)
         return self.__mul__(v)
     
+    fn __rmul__(self, other: Float32) -> Value:
+        return self.__mul__(other)
+    
     fn __eq__(self, other: Self) -> Bool:
         return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
 
@@ -325,7 +328,8 @@ fn main():
         d2 = a2 * b2 + b2**3
         c2 += c2 + 1
         c2 += 1 + c2 + (-a2)
-        #d2 += d2 * 2 + (b2 + a2).relu()
+        d2 += d2 * 2 + (b2 + a2).relu()
+        d2 += 3 * d2 + (b2 - a2).relu()
 
         if a2._prev1 != UnsafePointer[Value]():
             a2._prev1.destroy_pointee()
@@ -342,6 +346,22 @@ fn main():
         if b2._prev2 != UnsafePointer[Value]():
             b2._prev2.destroy_pointee()
             b2._prev2.free()
+
+        if c2._prev1 != UnsafePointer[Value]():
+            c2._prev1.destroy_pointee()
+            c2._prev1.free()
+        
+        if c2._prev2 != UnsafePointer[Value]():
+            c2._prev2.destroy_pointee()
+            c2._prev2.free()
+
+        if d2._prev1 != UnsafePointer[Value]():
+            d2._prev1.destroy_pointee()
+            d2._prev1.free()
+        
+        if d2._prev2 != UnsafePointer[Value]():
+            d2._prev2.destroy_pointee()
+            d2._prev2.free()
 
     #test1()
     test2()
