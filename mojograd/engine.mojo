@@ -239,6 +239,17 @@ struct Value():
     fn __print(self):
         print("data: ", self.data, "grad: ", self.grad, "Op: ", self._op)
     
+    fn destroy(owned self):
+        """Owned assures we get the unique ownership of the value, so we can free it."""
+        if self._prev1 != UnsafePointer[Value]():
+            self._prev1.destroy_pointee()
+            self._prev1.free()
+            
+        if self._prev2 != UnsafePointer[Value]():
+            self._prev2.destroy_pointee()
+            self._prev2.free()
+
+    
         
 fn main():
     fn test1():
@@ -256,70 +267,15 @@ fn main():
             d.__print()
             e.__print()
         finally:
-            if a._prev1 != UnsafePointer[Value]():
-                a._prev1.destroy_pointee()
-                a._prev1.free()
-            
-            if a._prev2 != UnsafePointer[Value]():
-                a._prev2.destroy_pointee()
-                a._prev2.free()
+            a.destroy()
+            b.destroy()
+            d.destroy()
+            e.destroy()
 
-            if b._prev1 != UnsafePointer[Value]():
-                b._prev1.destroy_pointee()
-                b._prev1.free()
-            
-            if b._prev2 != UnsafePointer[Value]():
-                b._prev2.destroy_pointee()
-                b._prev2.free()
-
-            if d._prev1 != UnsafePointer[Value]():
-                d._prev1.destroy_pointee()
-                d._prev1.free()
-            
-            if d._prev2 != UnsafePointer[Value]():
-                d._prev2.destroy_pointee()
-                d._prev2.free()
-
-            if e._prev1 != UnsafePointer[Value]():
-                e._prev1.destroy_pointee()
-                e._prev1.free()
-            
-            if e._prev2 != UnsafePointer[Value]():
-                e._prev2.destroy_pointee()
-                e._prev2.free() 
-
-
-        if a._prev1 != UnsafePointer[Value]():
-            a._prev1.destroy_pointee()
-            a._prev1.free()
-        
-        if a._prev2 != UnsafePointer[Value]():
-            a._prev2.destroy_pointee()
-            a._prev2.free()
-
-        if b._prev1 != UnsafePointer[Value]():
-            b._prev1.destroy_pointee()
-            b._prev1.free()
-        
-        if b._prev2 != UnsafePointer[Value]():
-            b._prev2.destroy_pointee()
-            b._prev2.free()
-
-        if d._prev1 != UnsafePointer[Value]():
-            d._prev1.destroy_pointee()
-            d._prev1.free()
-        
-        if d._prev2 != UnsafePointer[Value]():
-            d._prev2.destroy_pointee()
-            d._prev2.free()
-
-        if e._prev1 != UnsafePointer[Value]():
-            e._prev1.destroy_pointee()
-            e._prev1.free()
-        
-        if e._prev2 != UnsafePointer[Value]():
-            e._prev2.destroy_pointee()
-            e._prev2.free()
+        a.destroy()
+        b.destroy()
+        d.destroy()
+        e.destroy()
     
     fn test2():
         a2 = Value(4.0)
@@ -331,37 +287,10 @@ fn main():
         d2 += d2 * 2 + (b2 + a2).relu()
         d2 += 3 * d2 + (b2 - a2).relu()
 
-        if a2._prev1 != UnsafePointer[Value]():
-            a2._prev1.destroy_pointee()
-            a2._prev1.free()
-        
-        if a2._prev2 != UnsafePointer[Value]():
-            a2._prev2.destroy_pointee()
-            a2._prev2.free()
-
-        if b2._prev1 != UnsafePointer[Value]():
-            b2._prev1.destroy_pointee()
-            b2._prev1.free()
-        
-        if b2._prev2 != UnsafePointer[Value]():
-            b2._prev2.destroy_pointee()
-            b2._prev2.free()
-
-        if c2._prev1 != UnsafePointer[Value]():
-            c2._prev1.destroy_pointee()
-            c2._prev1.free()
-        
-        if c2._prev2 != UnsafePointer[Value]():
-            c2._prev2.destroy_pointee()
-            c2._prev2.free()
-
-        if d2._prev1 != UnsafePointer[Value]():
-            d2._prev1.destroy_pointee()
-            d2._prev1.free()
-        
-        if d2._prev2 != UnsafePointer[Value]():
-            d2._prev2.destroy_pointee()
-            d2._prev2.free()
+        a2.destroy()
+        b2.destroy() 
+        c2.destroy()
+        d2.destroy()
 
     #test1()
     test2()
