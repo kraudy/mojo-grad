@@ -127,13 +127,15 @@ struct Value():
         return self.__add__(- other)
 
     fn __truediv__(self, other: Value) -> Value:
-        return self * other ** -1
+        # Refacto this
+        return self.__mul__(other.__pow__(-1))
 
     fn __truediv__(self, other: Float32) -> Value:
-        return self * other ** -1
+        # Refacto this
+        return self.__mul__(other.__pow__(-1))
 
     fn __rtruediv__(self, other: Float32) -> Value:
-        return self * other ** -1
+        return other * self ** -1
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
@@ -305,31 +307,31 @@ fn main():
         assert_equal(c2.data, -2.0, "c2 should be -2.0")
 
         d2 = a2 * b2 + b2**3 
-        assert_equal(d2.data, 0.0, "d2 should be 16.0")
+        assert_equal(d2.data, 0.0, "d2 should be 0.0")
 
         c2 += c2 + 1 
-        #assert_equal(c2.data, 13.0, "c2 should be 13.0")
+        assert_equal(c2.data, -3.0, "c2 should be -3.0")
+
         c2 += 1 + c2 + (-a2) 
-        #assert_equal(c2.data, 23.0, "c2 should be 23.0")
+        assert_equal(c2.data, -1.0, "c2 should be -1.0")
+        
         d2 += d2 * 2 + (b2 + a2).relu() 
-        #assert_equal(d2.data, 54.0, "d2 should be 54.0")
+        assert_equal(d2.data, 0.0, "d2 should be 0.0") # 0 because of relu
+
         d2 += 3 * d2 + (b2 - a2).relu() 
-        #assert_equal(d2.data, 216.0, "d2 should be 216.0")
+        assert_equal(d2.data, 6.0, "d2 should be 6.0")
+
         e2 = c2 - d2 
-        #assert_equal(e2.data, -193.0, "e2 should be -193.0")
+        assert_equal(e2.data, -7.0, "e2 should be -7.0")
+
         f2 = e2**2 
-        #assert_equal(f2.data, 37249.0, "f2 should be 37249.0")
-        g2 = f2 / 2.0 # 18,624.5
-        #assert_equal(g2.data, 18624.5, "f2 should be 18624.5")
+        assert_equal(f2.data, 49.0, "f2 should be 49.0")
+
+        g2 = f2 / 2.0
+        assert_equal(g2.data, 24.5, "g2 should be 24.5")
+
         g2 += 10.0 / f2
-        g2.__print()
-
-        #print("g2")
-        #g2.__print()
-        #22349.4, deberia ser 24.7041 
-
-        #24.7041 is the result of micrograd
-
+        assert_equal(g2.data, 24.704082, "g2 should be almost 24.7041")
 
         a2.destroy()
         b2.destroy() 
