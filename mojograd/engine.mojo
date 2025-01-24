@@ -193,7 +193,8 @@ struct Value():
         fn _backward():
             var _out = UnsafePointer[Value].address_of(out)
             var _self = UnsafePointer[Value].address_of(self)
-            _self[].grad += (Float32(0) if _self[].data < 0 else _self[].data) * _out[].grad
+            # Validate this relu
+            _self[].grad += (Float32(0) if _out[].data < 0 else Float32(1)) * _out[].grad
         
         out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
       
@@ -304,17 +305,20 @@ fn main():
         c2 += c2 + 1 # 13
         c2 += 1 + c2 + (-a2) # 23
         d2 += d2 * 2 + (b2 + a2).relu() # 54
-        # 54 + 3 * 54 + (2 - 4) = 214 but got 216
-        # check this error in the sub
-        d2 += 3 * d2 + (b2 - a2).relu() # ?
+        print("d2 : 54")
+        d2.__print()
+        # 54 + 3 * 54 + (2 - 4) = 216 , remenber relu makes -2 to 2
+        d2 += 3 * d2 + (b2 - a2).relu() # 216
+        print("d2 : 216 but should be 214")
+        d2.__print()
         #    23 - 216 ? 214
         e2 = c2 - d2 # -193?
         f2 = e2**2 # 37249.0?
         g2 = f2 / 2.0 # 18,624.5
         g2 += 10.0 / f2
 
-        print("g2")
-        g2.__print()
+        #print("g2")
+        #g2.__print()
         #22349.4, deberia ser 24.7041 
 
 
