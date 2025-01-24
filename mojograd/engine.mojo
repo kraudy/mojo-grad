@@ -108,7 +108,8 @@ struct Value():
 
     fn __iadd__ (inout self, other: Value):
         var out = self.__add__(other)
-        self = other
+        self = out
+        #self = other
         
     fn __iadd__ (inout self, other: Float32):
         var out = self.__add__(other)
@@ -202,7 +203,7 @@ struct Value():
 
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
-    #         Validate inout                               Validate inout
+    # mut makes the changes visible to the calle
     fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
 
         if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
@@ -300,21 +301,22 @@ fn main():
         b2 = Value(2.0)
         c2 = a2 + b2 # 6
         d2 = a2 * b2 + b2**3 # 16
-        c2 += c2 + 1 # 7
-        c2 += 1 + c2 + (-a2) # 4
-        #     16 * 2 + (2 + 4)
-        d2 += d2 * 2 + (b2 + a2).relu() # 38
-        d2 += 3 * d2 + (b2 - a2).relu()
-        d2.__print()
-        e2 = c2 - d2
-        e2.__print()
-        f2 = e2**2
-        f2.__print()
-        g2 = f2 / 2.0
-        g2.__print()
+        c2 += c2 + 1 # 13
+        c2 += 1 + c2 + (-a2) # 23
+        d2 += d2 * 2 + (b2 + a2).relu() # 54
+        # 54 + 3 * 54 + (2 - 4) = 214 but got 216
+        # check this error in the sub
+        d2 += 3 * d2 + (b2 - a2).relu() # ?
+        #    23 - 216 ? 214
+        e2 = c2 - d2 # -193?
+        f2 = e2**2 # 37249.0?
+        g2 = f2 / 2.0 # 18,624.5
         g2 += 10.0 / f2
 
+        print("g2")
         g2.__print()
+        #22349.4, deberia ser 24.7041 
+
 
         a2.destroy()
         b2.destroy() 
@@ -326,3 +328,4 @@ fn main():
 
     #test1()
     test2()
+
