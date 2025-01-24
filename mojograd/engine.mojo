@@ -3,6 +3,7 @@
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer
 from memory import pointer
+from testing import assert_almost_equal, assert_true, assert_equal
 
 # Validate alias : fn() escaping -> None, alignment=1
 
@@ -297,29 +298,37 @@ fn main():
         d.destroy()
         e.destroy()
     
-    fn test2():
-        a2 = Value(4.0)
+    fn test2() raises:
+        a2 = Value(-4.0)
         b2 = Value(2.0)
-        c2 = a2 + b2 # 6
-        d2 = a2 * b2 + b2**3 # 16
-        c2 += c2 + 1 # 13
-        c2 += 1 + c2 + (-a2) # 23
-        d2 += d2 * 2 + (b2 + a2).relu() # 54
-        print("d2 : 54")
-        d2.__print()
-        # 54 + 3 * 54 + (2 - 4) = 216 , remenber relu makes -2 to 2
-        d2 += 3 * d2 + (b2 - a2).relu() # 216
-        print("d2 : 216 but should be 214")
-        d2.__print()
-        #    23 - 216 ? 214
-        e2 = c2 - d2 # -193?
-        f2 = e2**2 # 37249.0?
+        c2 = a2 + b2 
+        assert_equal(c2.data, -2.0, "c2 should be -2.0")
+
+        d2 = a2 * b2 + b2**3 
+        assert_equal(d2.data, 0.0, "d2 should be 16.0")
+
+        c2 += c2 + 1 
+        #assert_equal(c2.data, 13.0, "c2 should be 13.0")
+        c2 += 1 + c2 + (-a2) 
+        #assert_equal(c2.data, 23.0, "c2 should be 23.0")
+        d2 += d2 * 2 + (b2 + a2).relu() 
+        #assert_equal(d2.data, 54.0, "d2 should be 54.0")
+        d2 += 3 * d2 + (b2 - a2).relu() 
+        #assert_equal(d2.data, 216.0, "d2 should be 216.0")
+        e2 = c2 - d2 
+        #assert_equal(e2.data, -193.0, "e2 should be -193.0")
+        f2 = e2**2 
+        #assert_equal(f2.data, 37249.0, "f2 should be 37249.0")
         g2 = f2 / 2.0 # 18,624.5
+        #assert_equal(g2.data, 18624.5, "f2 should be 18624.5")
         g2 += 10.0 / f2
+        g2.__print()
 
         #print("g2")
         #g2.__print()
         #22349.4, deberia ser 24.7041 
+
+        #24.7041 is the result of micrograd
 
 
         a2.destroy()
@@ -331,5 +340,8 @@ fn main():
         g2.destroy()
 
     #test1()
-    test2()
+    try:
+        test2()
+    except e:
+        print(e)
 
