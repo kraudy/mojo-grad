@@ -221,17 +221,11 @@ struct Value():
         print(len(visited))
         if self._prev1 != UnsafePointer[Value]():
             print("Entered _prev1 != UnsafePointer[Value]()")
-            var _children1 = self._prev1[]
-            print(_children1.data)
-            if _children1._prev1 != UnsafePointer[Value]():
-                Value.build_topo(_children1, visited, topo)
+            Value.build_topo(self._prev1[], visited, topo)
 
         if self._prev2 != UnsafePointer[Value]():
             print("Entered _prev2 != UnsafePointer[Value]()")
-            var _children2 = self._prev2[]
-            print(_children2.data)
-            if _children2._prev2 != UnsafePointer[Value]():
-                Value.build_topo(_children2, visited, topo)
+            Value.build_topo(self._prev2[], visited, topo)
         
         topo.append(UnsafePointer[Value].address_of(self))
         print(len(topo))
@@ -249,12 +243,13 @@ struct Value():
 
         self.grad = Float32(1.0)
 
-        for v in reversed(topo):
+        for v_ptr in reversed(topo):
             print("for reversed")
-            print(len(topo))
             # Note the double [] needed, the first for the iterator and the second for the pointer
-            v[][]._func[]()
-            v[][].__print()
+            var v = v_ptr[][]
+            if v._func != UnsafePointer[fn() escaping -> None, alignment=1]():
+                v._func[]()
+            v.__print()
 
     
     fn __print(self):
@@ -333,6 +328,20 @@ fn main():
         # We got the same output as micrograd
 
         # Now comes the backward
+        try:
+            g2.backward()
+            print("After backward")
+            a2.__print()
+            b2.__print()
+
+        finally:
+            a2.destroy()
+            b2.destroy() 
+            c2.destroy()
+            d2.destroy()
+            e2.destroy()
+            f2.destroy()
+            g2.destroy()
 
         a2.destroy()
         b2.destroy() 
