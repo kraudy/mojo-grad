@@ -255,6 +255,9 @@ struct Value():
     fn __print(self):
         print("data: ", self.data, "grad: ", self.grad, "Op: ", self._op)
     
+    fn __repr__(self) -> String:
+        return "data: " + str(self.data) + " | grad: " + str(self.grad) + " | Op: " + self._op
+    
     fn destroy(owned self):
         """Owned assures we get the unique ownership of the value, so we can free it."""
         if self._prev1 != UnsafePointer[Value]():
