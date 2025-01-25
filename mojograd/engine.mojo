@@ -71,7 +71,7 @@ struct Value():
     fn __copyinit__(out self, existing: Self):
         self.data = existing.data
         self.grad = existing.grad
-        # Validate
+        # Validate pointee copy
         self._func = existing._func
         self._prev1 = existing._prev1
         self._prev2 = existing._prev2
@@ -99,43 +99,40 @@ struct Value():
     fn __add__(self, other: Float32) -> Value:
         # We are only making the conversion and reusing the value __add__ logic
         var v = Value(other)
-        return self.__add__(v)
+        return self + v
     
     fn __radd__(self, other: Float32) -> Value:
+        # When adding the order is indifferent
         return self.__add__(other)
 
     fn __neg__(self) -> Value:
-        return self.__mul__(-1.0)
+        return self * (-1)
 
     fn __iadd__ (inout self, other: Value):
-        var out = self.__add__(other)
+        var out = self + other
         self = out
-        #self = other
         
     fn __iadd__ (inout self, other: Float32):
-        var out = self.__add__(other)
-        #self = out
+        var out = self + other
         self = out
     
     fn __sub__(self, other: Value) -> Value:
-        return self.__add__(- other)
+        return self + (- other)
 
     fn __sub__(self, other: Float32) -> Value:
-        return self.__add__(- other)
+        return self + (- other)
 
     fn __rsub__(self, other: Float32) -> Value:
-        return self.__add__(- other)
+        return other + (- self)
 
     fn __truediv__(self, other: Value) -> Value:
-        # Refacto this
-        return self.__mul__(other.__pow__(-1))
+        return self * (other ** -1)
 
     fn __truediv__(self, other: Float32) -> Value:
-        # Refacto this
-        return self.__mul__(other.__pow__(-1))
+        return self * (other ** -1)
 
     fn __rtruediv__(self, other: Float32) -> Value:
-        return other * self ** -1
+        return other * (self ** -1)
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
@@ -159,9 +156,10 @@ struct Value():
     fn __mul__(self, other: Float32) -> Value:
         # We are only making the conversion and reusing the value __mul__ logic
         var v = Value(other)
-        return self.__mul__(v)
+        return self * v
     
     fn __rmul__(self, other: Float32) -> Value:
+        # When adding the order is indifferent
         return self.__mul__(other)
     
     fn __eq__(self, other: Self) -> Bool:
@@ -188,7 +186,7 @@ struct Value():
     
     fn __pow__(self, other: Float32) -> Value:
         var v = Value(other)
-        return self.__pow__(v)
+        return self ** v
 
     fn relu(self) -> Value:
         var out = Value(data = (Float32(0) if self.data < 0 else self.data), prev1 = self, op = 'ReLu')
@@ -332,6 +330,9 @@ fn main():
 
         g2 += 10.0 / f2
         assert_equal(g2.data, 24.704082, "g2 should be almost 24.7041")
+        # We got the same output as micrograd
+
+        # Now comes the backward
 
         a2.destroy()
         b2.destroy() 
