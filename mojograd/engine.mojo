@@ -76,23 +76,13 @@ struct Value():
         self._prev1 = existing._prev1
         self._prev2 = existing._prev2
         self._op = existing._op
+      
+    fn backward_add(mut self):
+        self._prev1[].grad += self.grad
+        self._prev2[].grad += self.grad
 
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data + other.data), prev1 = self, prev2 = other, op = '+')
-
-        fn _backward() -> None:
-            print("Trying _backward add")
-            var out_grad = out.grad
-            print("out_grad: ", out_grad)
-            var _self = UnsafePointer[Value].address_of(self) 
-            var _other = UnsafePointer[Value].address_of(other)
-            _self[].grad += out_grad
-            _other[].grad += out_grad
-        
-        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
-
-        # Validate ^
-        out._func.init_pointee_move(_backward)
 
         return out
 
@@ -133,23 +123,13 @@ struct Value():
 
     fn __rtruediv__(self, other: Float32) -> Value:
         return other * (self ** -1)
+    
+    fn backward_mul(mut self):
+        self._prev1[].grad += self._prev2[].data * self.grad
+        self._prev2[].grad += self._prev1[].data * self.grad
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
-
-        fn _backward() -> None:
-            print("Trying _backward mul")
-            var out_grad = out.grad
-            print("out_grad: ", out_grad)
-            var _self = UnsafePointer[Value].address_of(self) 
-            var _other = UnsafePointer[Value].address_of(other)
-            _self[].grad += _other[].data * out_grad
-            _other[].grad += _self[].data * out_grad
-        
-        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
-
-        # Validate ^
-        out._func.init_pointee_move(_backward)
 
         return out
 
@@ -165,22 +145,11 @@ struct Value():
     fn __eq__(self, other: Self) -> Bool:
         return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
 
-    
+    fn backward_pow(mut self):
+        self._prev1[].grad += (self._prev2[].data * self._prev1[].data ** (self._prev2[].data - 1)) * self.grad
+
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data ** other.data), prev1 = self, prev2 = other, op = '**')
-
-        fn _backward() -> None:
-            print("Trying _backward pow")
-            var out_grad = out.grad
-            print("out_grad: ", out_grad)
-            var _self = UnsafePointer[Value].address_of(self) 
-            var _other = UnsafePointer[Value].address_of(other)
-            _self[].grad += (_other[].data * _self[].data ** (_other[].data - 1)) *  out_grad # Validate this out_grad
-        
-        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
-
-        # Validate ^
-        out._func.init_pointee_move(_backward)
 
         return out
     
@@ -188,18 +157,12 @@ struct Value():
         var v = Value(other)
         return self ** v
 
+    fn backward_relu(mut self):
+        self._prev1[].grad += (Float32(0) if self.data < 0 else self.grad) 
+
+
     fn relu(self) -> Value:
         var out = Value(data = (Float32(0) if self.data < 0 else self.data), prev1 = self, op = 'ReLu')
-
-        fn _backward():
-            var _out = UnsafePointer[Value].address_of(out)
-            var _self = UnsafePointer[Value].address_of(self)
-            # Validate this relu
-            _self[].grad += (Float32(0) if _out[].data < 0 else Float32(1)) * _out[].grad
-        
-        out._func = UnsafePointer[fn() escaping -> None, alignment=1].alloc(1)
-      
-        out._func.init_pointee_move(_backward)
         
         return out
 
@@ -247,9 +210,23 @@ struct Value():
             print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             var v = v_ptr[][]
-            if v._func != UnsafePointer[fn() escaping -> None, alignment=1]():
-                v._func[]()
-            v.__print()
+            print(repr(v))
+            if v._op == "+":
+                v.backward_add()
+            elif v._op == "*":
+                v.backward_mul()
+            elif v._op == "**":
+                v.backward_pow()
+            elif v._op == "ReLu":
+                v.backward_relu()
+
+            print(repr(v))
+          
+            #if v._func != UnsafePointer[fn() escaping -> None, alignment=1]():
+            #    v._func[]()
+            
+            #print(repr(v._prev1[]))
+            #print(repr(v._prev2[]))
 
     
     fn __print(self):
@@ -271,20 +248,22 @@ struct Value():
     
         
 fn main():
-    fn test1():
+    fn test1() raises:
         var a = Value(data = 2.0)
         var b = Value(data = 3.0)
         var c = Float32(2.0)
+
         var d = b ** c
+        assert_equal(d.data, 9.0, "d should be 9.0")
+
         var e = a + c
+        assert_equal(e.data, 4.0, "e should be 4.0")
         
         try:
             e.backward()
+            print(repr(a))
+            print(repr(b))
 
-            a.__print()
-            b.__print()
-            d.__print()
-            e.__print()
         finally:
             a.destroy()
             b.destroy()
@@ -334,8 +313,8 @@ fn main():
         try:
             g2.backward()
             print("After backward")
-            a2.__print()
-            b2.__print()
+            print(repr(a2))
+            print(repr(b2))
 
         finally:
             a2.destroy()
@@ -354,9 +333,11 @@ fn main():
         f2.destroy()
         g2.destroy()
 
-    #test1()
+    
+
     try:
-        test2()
+        test1()
+        #test2()
     except e:
         print(e)
 
