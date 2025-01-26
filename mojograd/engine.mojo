@@ -212,15 +212,26 @@ struct Value():
             var v = v_ptr[][]
             print(repr(v))
             if v._op == "+":
+                print(repr(v._prev1[]))
+                print(repr(v._prev2[]))
                 v.backward_add()
+                print(repr(v._prev1[]))
+                print(repr(v._prev2[]))
             elif v._op == "*":
+                print(repr(v._prev1[]))
+                print(repr(v._prev2[]))
                 v.backward_mul()
+                print(repr(v._prev1[]))
+                print(repr(v._prev2[]))
             elif v._op == "**":
+                print(repr(v._prev1[]))
                 v.backward_pow()
+                print(repr(v._prev1[]))
             elif v._op == "ReLu":
+                print(repr(v._prev1[]))
                 v.backward_relu()
+                print(repr(v._prev1[]))
 
-            print(repr(v))
           
             #if v._func != UnsafePointer[fn() escaping -> None, alignment=1]():
             #    v._func[]()
@@ -336,8 +347,8 @@ fn main():
     
 
     try:
-        test1()
-        #test2()
+        #test1()
+        test2()
     except e:
         print(e)
 
