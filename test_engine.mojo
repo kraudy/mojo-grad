@@ -16,6 +16,10 @@ fn main():
         
         try:
             e.backward()
+            print("Results =============")
+            assert_equal(b.grad[], 0.0, "b grad should be 0.0")
+            assert_equal(a.grad[], 1.0, "a grad should be 1.0")
+
             print(repr(a))
             print(repr(b))
 
@@ -31,117 +35,58 @@ fn main():
         e.destroy()
     
     fn test2() raises:
-        a2 = Value(-4.0)
-        b2 = Value(2.0)
-        c2 = a2 + b2 
-        assert_equal(c2.data[], -2.0, "c2 should be -2.0")
+        a = Value(-4.0)
+        b = Value(2.0)
+        c = a + b 
+        assert_equal(c.data[], -2.0, "c2 should be -2.0")
 
-        d2 = a2 * b2 + b2**3 
-        assert_equal(d2.data[], 0.0, "d2 should be 0.0")
+        d = a * b + b**3 
+        assert_equal(d.data[], 0.0, "d should be 0.0")
 
-        c2 += c2 + 1 
-        assert_equal(c2.data[], -3.0, "c2 should be -3.0")
+        c += c + 1 
+        assert_equal(c.data[], -3.0, "c should be -3.0")
 
-        c2 += 1 + c2 + (-a2) 
-        assert_equal(c2.data[], -1.0, "c2 should be -1.0")
-        
-        d2 += d2 * 2 + (b2 + a2).relu() 
-        assert_equal(d2.data[], 0.0, "d2 should be 0.0") # 0 because of relu
+        c += 1 + c + (-a) 
+        assert_equal(c.data[], -1.0, "c should be -1.0")
 
-        d2 += 3 * d2 + (b2 - a2).relu() 
-        assert_equal(d2.data[], 6.0, "d2 should be 6.0")
+        d += d * 2 + (b + a).relu() 
+        assert_equal(d.data[], 0.0, "d should b 0.0")
 
-        e2 = c2 - d2 
-        assert_equal(e2.data[], -7.0, "e2 should be -7.0")
+        d += 3 * d + (b - a).relu() 
+        assert_equal(d.data[], 6.0, "d should b 6.0")
 
-        f2 = e2**2 
-        assert_equal(f2.data[], 49.0, "f2 should be 49.0")
+        e = c - d 
+        assert_equal(e.data[], -7.0, "e should be -7.0")
 
-        g2 = f2 / 2.0
-        assert_equal(g2.data[], 24.5, "g2 should be 24.5")
+        f = e**2 
+        assert_equal(f.data[], 49.0, "f should be 49.0")
 
-        g2 += 10.0 / f2
-        assert_equal(g2.data[], 24.704082, "g2 should be almost 24.7041")
-        # We got the same output as micrograd
+        g = f / 2.0
+        assert_equal(g.data[], 24.5, "g should be 24.5")
 
-        # Now comes the backward
-        try:
-            g2.backward()
-            print("After backward")
-            print(repr(a2))
-            print(repr(b2))
-
-        finally:
-            a2.destroy()
-            b2.destroy() 
-            c2.destroy()
-            d2.destroy()
-            e2.destroy()
-            f2.destroy()
-            g2.destroy()
-
-        a2.destroy()
-        b2.destroy() 
-        c2.destroy()
-        d2.destroy()
-        e2.destroy()
-        f2.destroy()
-        g2.destroy()
-
-    fn test3() raises:
-        a3 = Value(-4.0)
-        b3 = Value(2.0)
-        c3 = a3 + b3 
-        assert_equal(c3.data[], -2.0, "c2 should be -2.0")
-
-        d3 = a3 * b3 + b3**3 
-        assert_equal(d3.data[], 0.0, "d3 should be 0.0")
-
-        c3 += c3 + 1 
-        assert_equal(c3.data[], -3.0, "c3 should be -3.0")
-
-        c3 += 1 + c3 + (-a3) 
-        assert_equal(c3.data[], -1.0, "c3 should be -1.0")
-
-        d3 += d3 * 2 + (b3 + a3).relu() 
-        assert_equal(d3.data[], 0.0, "d3 should b3 0.0")
-
-        d3 += 3 * d3 + (b3 - a3).relu() 
-        assert_equal(d3.data[], 6.0, "d3 should b3 6.0")
-
-        e3 = c3 - d3 
-        assert_equal(e3.data[], -7.0, "e3 should be -7.0")
-
-        f3 = e3**2 
-        assert_equal(f3.data[], 49.0, "f3 should be 49.0")
-
-        g3 = f3 / 2.0
-        assert_equal(g3.data[], 24.5, "g3 should be 24.5")
-
-        g3 += 10.0 / f3
-        assert_equal(g3.data[], 24.704082, "g3 should be almost 24.7041")
+        g += 10.0 / f
+        assert_equal(g.data[], 24.704082, "g should be almost 24.7041")
 
         try:
-            g3.backward()
-            print("Results")
-            assert_equal(b3.grad[], 645.5773, "b3 grad should be almost 645.5773")
-            assert_equal(a3.grad[], 138.83382, "a3 grad should be almost 138.83382")
-            print(repr(b3))
-            print(repr(a3))
+            g.backward()
+            print("Results ===============================")
+            assert_equal(b.grad[], 645.5773, "b grad should be almost 645.5773")
+            assert_equal(a.grad[], 138.83382, "a grad should be almost 138.83382")
+            print(repr(b))
+            print(repr(a))
         finally:
-            a3.destroy()
-            b3.destroy() 
-            c3.destroy()
-            d3.destroy()
+            a.destroy()
+            b.destroy() 
+            c.destroy()
+            d.destroy()
 
-        a3.destroy()
-        b3.destroy() 
-        c3.destroy()
-        d3.destroy()
+        a.destroy()
+        b.destroy() 
+        c.destroy()
+        d.destroy()
 
     try:
-        #test1()
-        #test2()
-        test3()
+        test1()
+        test2()
     except e:
         print(e)
