@@ -9,10 +9,10 @@ fn main():
         var c = Float32(2.0)
 
         var d = b ** c
-        assert_equal(d.data, 9.0, "d should be 9.0")
+        assert_equal(d.data[], 9.0, "d should be 9.0")
 
         var e = a + c
-        assert_equal(e.data, 4.0, "e should be 4.0")
+        assert_equal(e.data[], 4.0, "e should be 4.0")
         
         try:
             e.backward()
@@ -34,34 +34,34 @@ fn main():
         a2 = Value(-4.0)
         b2 = Value(2.0)
         c2 = a2 + b2 
-        assert_equal(c2.data, -2.0, "c2 should be -2.0")
+        assert_equal(c2.data[], -2.0, "c2 should be -2.0")
 
         d2 = a2 * b2 + b2**3 
-        assert_equal(d2.data, 0.0, "d2 should be 0.0")
+        assert_equal(d2.data[], 0.0, "d2 should be 0.0")
 
         c2 += c2 + 1 
-        assert_equal(c2.data, -3.0, "c2 should be -3.0")
+        assert_equal(c2.data[], -3.0, "c2 should be -3.0")
 
         c2 += 1 + c2 + (-a2) 
-        assert_equal(c2.data, -1.0, "c2 should be -1.0")
+        assert_equal(c2.data[], -1.0, "c2 should be -1.0")
         
         d2 += d2 * 2 + (b2 + a2).relu() 
-        assert_equal(d2.data, 0.0, "d2 should be 0.0") # 0 because of relu
+        assert_equal(d2.data[], 0.0, "d2 should be 0.0") # 0 because of relu
 
         d2 += 3 * d2 + (b2 - a2).relu() 
-        assert_equal(d2.data, 6.0, "d2 should be 6.0")
+        assert_equal(d2.data[], 6.0, "d2 should be 6.0")
 
         e2 = c2 - d2 
-        assert_equal(e2.data, -7.0, "e2 should be -7.0")
+        assert_equal(e2.data[], -7.0, "e2 should be -7.0")
 
         f2 = e2**2 
-        assert_equal(f2.data, 49.0, "f2 should be 49.0")
+        assert_equal(f2.data[], 49.0, "f2 should be 49.0")
 
         g2 = f2 / 2.0
-        assert_equal(g2.data, 24.5, "g2 should be 24.5")
+        assert_equal(g2.data[], 24.5, "g2 should be 24.5")
 
         g2 += 10.0 / f2
-        assert_equal(g2.data, 24.704082, "g2 should be almost 24.7041")
+        assert_equal(g2.data[], 24.704082, "g2 should be almost 24.7041")
         # We got the same output as micrograd
 
         # Now comes the backward
@@ -92,7 +92,7 @@ fn main():
         a3 = Value(-4.0)
         b3 = Value(2.0)
         c3 = a3 + b3 
-        assert_equal(c3.data, -2.0, "c2 should be -2.0")
+        assert_equal(c3.data[], -2.0, "c2 should be -2.0")
 
         d3 = a3 * b3 + b3**3 
         #assert_equal(d3.data, 0.0, "d3 should be 0.0")

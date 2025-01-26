@@ -1,4 +1,8 @@
-"""  """
+
+""" 
+Here is what i need to do, the objects can be cloned, it does not matter if the class fields keep pointing 
+to the same data
+"""
 
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
@@ -7,7 +11,7 @@ from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 # Validate alias : fn() escaping -> None, alignment=1
 
 struct Value():
-    var data: Float32
+    var data: ArcPointer[Float32]
     var grad : Float32
 
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
@@ -17,9 +21,9 @@ struct Value():
 
     var _op : String
 
-    fn __init__(inout self, data: Float32):
+    fn __init__(inout self, data: ArcPointer[Float32]):
         
-        self.data = Float32(data)
+        self.data = data
         self.grad = Float32(0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
@@ -28,9 +32,20 @@ struct Value():
 
         self._op = String('') 
 
-    fn __init__(inout self, data: Float32, prev1: Value, op: String):
+    fn __init__(inout self, data: Float32):
         
-        self.data = Float32(data)
+        self.data = ArcPointer[Float32](data)
+        self.grad = Float32(0)
+
+        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+        self._prev = List[ArcPointer[Value]]()
+
+
+        self._op = String('') 
+
+    fn __init__(inout self, data: ArcPointer[Float32], prev1: Value, op: String):
+        
+        self.data = data
         self.grad = Float32(0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
@@ -40,9 +55,8 @@ struct Value():
 
         self._op = op
 
-    fn __init__(inout self, data: Float32, prev1: Value, prev2: Value, op: String):
-        
-        self.data = Float32(data)
+    fn __init__(inout self, data: ArcPointer[Float32], prev1: Value, prev2: Value, op: String):
+        self.data = data
         self.grad = Float32(0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
@@ -63,7 +77,6 @@ struct Value():
         self._op = existing._op
     
     fn __copyinit__(out self, existing: Self):
-        #self.data = ArcPointer[Float32](existing.data)
         self.data = existing.data
         self.grad = existing.grad
         # Validate pointee copy
@@ -77,7 +90,7 @@ struct Value():
         self._prev[1][].grad += self.grad
 
     fn __add__(self, other: Value) -> Value:
-        var out = Value(data = (self.data + other.data), prev1 = self, prev2 = other, op = '+')
+        var out = Value(data = (ArcPointer[Float32](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
 
         return out
 
@@ -120,11 +133,11 @@ struct Value():
         return other * (self ** -1)
     
     fn backward_mul(mut self):
-        self._prev[0][].grad += self._prev[1][].data * self.grad
-        self._prev[1][].grad += self._prev[0][].data * self.grad
+        self._prev[0][].grad += self._prev[1][].data[] * self.grad
+        self._prev[1][].grad += self._prev[0][].data[] * self.grad
 
     fn __mul__(self, other: Value) -> Value:
-        var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
+        var out = Value(data = (ArcPointer[Float32](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
 
         return out
 
@@ -141,10 +154,10 @@ struct Value():
         return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
 
     fn backward_pow(mut self):
-        self._prev[0][].grad += (self._prev[1][].data * self._prev[0][].data ** (self._prev[1][].data - 1)) * self.grad
+        self._prev[0][].grad += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad
 
     fn __pow__(self, other : Value) -> Value:
-        var out = Value(data = (self.data ** other.data), prev1 = self, prev2 = other, op = '**')
+        var out = Value(data = (self.data[] ** other.data[]), prev1 = self, prev2 = other, op = '**')
 
         return out
     
@@ -153,11 +166,11 @@ struct Value():
         return self ** v
 
     fn backward_relu(mut self):
-        self._prev[0][].grad += (Float32(0) if self.data < 0 else self.grad) 
+        self._prev[0][].grad += (Float32(0) if self.data[] < 0 else self.grad) 
 
 
     fn relu(self) -> Value:
-        var out = Value(data = (Float32(0) if self.data < 0 else self.data), prev1 = self, op = 'ReLu')
+        var out = Value(data = (Float32(0) if self.data[] < 0 else self.data), prev1 = self, op = 'ReLu')
         
         return out
 
@@ -246,10 +259,10 @@ struct Value():
 
     
     fn __print(self):
-        print("data: ", self.data, "grad: ", self.grad, "Op: ", self._op)
+        print("data: ", self.data[], "grad: ", self.grad, "Op: ", self._op)
     
     fn __repr__(self) -> String:
-        return "data: " + str(self.data) + " | grad: " + str(self.grad) + " | Op: " + self._op
+        return "data: " + str(self.data[]) + " | grad: " + str(self.grad) + " | Op: " + self._op
     
     fn destroy(owned self):
         """Owned assures we get the unique ownership of the value, so we can free it."""
