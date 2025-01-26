@@ -1,7 +1,7 @@
 """  """
 
 from collections import Optional, List, Dict, InlineList, Set
-from memory import UnsafePointer, memset_zero, ArcPointer, pointer
+from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 
 
 # Validate alias : fn() escaping -> None, alignment=1
@@ -63,12 +63,14 @@ struct Value():
         self._op = existing._op
     
     fn __copyinit__(out self, existing: Self):
+        #self.data = ArcPointer[Float32](existing.data)
         self.data = existing.data
         self.grad = existing.grad
         # Validate pointee copy
         self._func = existing._func
         self._prev = existing._prev
         self._op = existing._op
+        #self =  existing
       
     fn backward_add(mut self):
         self._prev[0][].grad += self.grad
@@ -198,10 +200,12 @@ struct Value():
         print(len(topo))
         print(len(visited))
 
-        Value.build_topo(self, visited, topo)
+        var self_ref = ArcPointer[Value](self)
 
-        self.grad = Float32(1.0)
-        topo[-1][].grad = Float32(1.0)
+        Value.build_topo(self_ref, visited, topo)
+
+        self_ref[].grad = Float32(1.0)
+        #topo[-1][].grad = Float32(1.0)
 
         print(repr(self))
         print(repr(topo[-1][]))
