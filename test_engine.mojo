@@ -101,7 +101,8 @@ fn main():
 
         try:
             d3.backward()
-
+            print(repr(a3))
+            print(repr(b3))
         finally:
             a3.destroy()
             b3.destroy() 
@@ -115,7 +116,7 @@ fn main():
 
     try:
         #test1()
-        #test2()
-        test3()
+        test2()
+        #test3()
     except e:
         print(e)

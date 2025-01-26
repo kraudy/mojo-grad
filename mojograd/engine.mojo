@@ -1,7 +1,7 @@
 """  """
 
 from collections import Optional, List, Dict, InlineList, Set
-from memory import UnsafePointer, memset_zero, ArcPointer
+from memory import UnsafePointer, memset_zero, ArcPointer, pointer
 
 
 # Validate alias : fn() escaping -> None, alignment=1
@@ -13,8 +13,8 @@ struct Value():
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
     # var _prev :  Set[Value]
-    var _prev1 : UnsafePointer[Value]
-    var _prev2 : UnsafePointer[Value]
+    var _prev : List[ArcPointer[Value]]
+
     var _op : String
 
     fn __init__(inout self, data: Float32):
@@ -23,8 +23,8 @@ struct Value():
         self.grad = Float32(0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
-        self._prev1 = UnsafePointer[Value]() 
-        self._prev2 = UnsafePointer[Value]() 
+        self._prev = List[ArcPointer[Value]]()
+
 
         self._op = String('') 
 
@@ -35,10 +35,8 @@ struct Value():
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
-        self._prev1 = UnsafePointer[Value].alloc(1)
-        self._prev1.init_pointee_copy(prev1)
-
-        self._prev2 = UnsafePointer[Value]() 
+        self._prev = List[ArcPointer[Value]]()
+        self._prev.append(ArcPointer[Value](prev1))
 
         self._op = op
 
@@ -49,11 +47,9 @@ struct Value():
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
-        self._prev1 = UnsafePointer[Value].alloc(1)
-        self._prev1.init_pointee_copy(prev1)
-
-        self._prev2 = UnsafePointer[Value].alloc(1)
-        self._prev2.init_pointee_copy(prev2)
+        self._prev = List[ArcPointer[Value]]()
+        self._prev.append(ArcPointer[Value](prev1))
+        self._prev.append(ArcPointer[Value](prev2))
 
         self._op = op
 
@@ -63,8 +59,7 @@ struct Value():
         self.grad = existing.grad
         # Validate
         self._func = existing._func
-        self._prev1 = existing._prev1
-        self._prev2 = existing._prev2
+        self._prev = existing._prev
         self._op = existing._op
     
     fn __copyinit__(out self, existing: Self):
@@ -72,13 +67,12 @@ struct Value():
         self.grad = existing.grad
         # Validate pointee copy
         self._func = existing._func
-        self._prev1 = existing._prev1
-        self._prev2 = existing._prev2
+        self._prev = existing._prev
         self._op = existing._op
       
     fn backward_add(mut self):
-        self._prev1[].grad += self.grad
-        self._prev2[].grad += self.grad
+        self._prev[0][].grad += self.grad
+        self._prev[1][].grad += self.grad
 
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data + other.data), prev1 = self, prev2 = other, op = '+')
@@ -124,8 +118,8 @@ struct Value():
         return other * (self ** -1)
     
     fn backward_mul(mut self):
-        self._prev1[].grad += self._prev2[].data * self.grad
-        self._prev2[].grad += self._prev1[].data * self.grad
+        self._prev[0][].grad += self._prev[1][].data * self.grad
+        self._prev[1][].grad += self._prev[0][].data * self.grad
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data * other.data), prev1 = self, prev2 = other, op = '*')
@@ -145,7 +139,7 @@ struct Value():
         return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
 
     fn backward_pow(mut self):
-        self._prev1[].grad += (self._prev2[].data * self._prev1[].data ** (self._prev2[].data - 1)) * self.grad
+        self._prev[0][].grad += (self._prev[1][].data * self._prev[0][].data ** (self._prev[1][].data - 1)) * self.grad
 
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data ** other.data), prev1 = self, prev2 = other, op = '**')
@@ -157,7 +151,7 @@ struct Value():
         return self ** v
 
     fn backward_relu(mut self):
-        self._prev1[].grad += (Float32(0) if self.data < 0 else self.grad) 
+        self._prev[0][].grad += (Float32(0) if self.data < 0 else self.grad) 
 
 
     fn relu(self) -> Value:
@@ -168,34 +162,37 @@ struct Value():
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
     # mut makes the changes visible to the calle
-    fn build_topo(self, mut visited: List[UnsafePointer[Value]], mut topo: List[UnsafePointer[Value]]):
-
-        if UnsafePointer[Value].address_of(self) == UnsafePointer[Value]():
-            return
+    fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
 
         print("Build topo")
 
-        if UnsafePointer[Value].address_of(self) in visited:
-            return
+        #if UnsafePointer[Value].address_of(self_ptr) in visited:
+        #    return
+        #if ArcPointer[Value].address_of(self_ptr[]) in visited:
+        for vis in visited:
+            if self_ptr.__is__(vis[]):
+                return
             
         print("Entering not visited")
-        visited.append(UnsafePointer.address_of(self))
+        #visited.append(UnsafePointer.address_of(self_ptr))
+        visited.append(self_ptr)
         print(len(visited))
-        if self._prev1 != UnsafePointer[Value]():
+        if len(self_ptr[]._prev) > 0:
             print("Entered _prev1 != UnsafePointer[Value]()")
-            Value.build_topo(self._prev1[], visited, topo)
+            Value.build_topo(self_ptr[]._prev[0][], visited, topo)
 
-        if self._prev2 != UnsafePointer[Value]():
+        if len(self_ptr[]._prev) == 2:
             print("Entered _prev2 != UnsafePointer[Value]()")
-            Value.build_topo(self._prev2[], visited, topo)
+            Value.build_topo(self_ptr[]._prev[1][], visited, topo)
         
-        topo.append(UnsafePointer[Value].address_of(self))
+        #topo.append(UnsafePointer[Value].address_of(self_ptr))
+        topo.append(self_ptr)
         print(len(topo))
 
     fn backward(mut self):
         # Maybe this needs to be a pointer, we'll see
-        var visited = List[UnsafePointer[Value]]()
-        var topo = List[UnsafePointer[Value]]()
+        var visited = List[ArcPointer[Value]]()
+        var topo = List[ArcPointer[Value]]()
 
         print("previous topo")
         print(len(topo))
@@ -204,6 +201,11 @@ struct Value():
         Value.build_topo(self, visited, topo)
 
         self.grad = Float32(1.0)
+        topo[-1][].grad = Float32(1.0)
+
+        print(repr(self))
+        print(repr(topo[-1][]))
+        print("================")
 
         for v_ptr in reversed(topo):
             print("for reversed")
@@ -211,25 +213,25 @@ struct Value():
             var v = v_ptr[][]
             print(repr(v))
             if v._op == "+":
-                print(repr(v._prev1[]))
-                print(repr(v._prev2[]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
                 v.backward_add()
-                print(repr(v._prev1[]))
-                print(repr(v._prev2[]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
             elif v._op == "*":
-                print(repr(v._prev1[]))
-                print(repr(v._prev2[]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
                 v.backward_mul()
-                print(repr(v._prev1[]))
-                print(repr(v._prev2[]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
             elif v._op == "**":
-                print(repr(v._prev1[]))
+                print(repr(v._prev[0][]))
                 v.backward_pow()
-                print(repr(v._prev1[]))
+                print(repr(v._prev[0][]))
             elif v._op == "ReLu":
-                print(repr(v._prev1[]))
+                print(repr(v._prev[0][]))
                 v.backward_relu()
-                print(repr(v._prev1[]))
+                print(repr(v._prev[0][]))
 
           
             #if v._func != UnsafePointer[fn() escaping -> None, alignment=1]():
@@ -247,12 +249,13 @@ struct Value():
     
     fn destroy(owned self):
         """Owned assures we get the unique ownership of the value, so we can free it."""
-        if self._prev1 != UnsafePointer[Value]():
-            self._prev1.destroy_pointee()
-            self._prev1.free()
+        #if self._prev1 != UnsafePointer[Value]():
+        #    self._prev1.destroy_pointee()
+        #    self._prev1.free()
             
-        if self._prev2 != UnsafePointer[Value]():
-            self._prev2.destroy_pointee()
-            self._prev2.free()
+        #if self._prev2 != UnsafePointer[Value]():
+        #    self._prev2.destroy_pointee()
+        #    self._prev2.free()
+        pass
 
     
