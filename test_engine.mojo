@@ -1,5 +1,6 @@
 from mojograd.engine import Value 
 from testing import assert_almost_equal, assert_true, assert_equal
+from python import Python
 
 fn main():
     fn test1() raises:
@@ -87,10 +88,34 @@ fn main():
         f2.destroy()
         g2.destroy()
 
-    
+    fn test3() raises:
+        a3 = Value(-4.0)
+        b3 = Value(2.0)
+        c3 = a3 + b3 
+        assert_equal(c3.data, -2.0, "c2 should be -2.0")
+
+        d3 = a3 * b3 + b3**3 
+        #assert_equal(d3.data, 0.0, "d3 should be 0.0")
+        # Here is the prolem b3 should update its gradient to -4 and 12 = 8 but it points
+        # to different objects and the original is not even affected
+
+        try:
+            d3.backward()
+
+        finally:
+            a3.destroy()
+            b3.destroy() 
+            c3.destroy()
+            d3.destroy()
+
+        a3.destroy()
+        b3.destroy() 
+        c3.destroy()
+        d3.destroy()
 
     try:
         #test1()
-        test2()
+        #test2()
+        test3()
     except e:
         print(e)
