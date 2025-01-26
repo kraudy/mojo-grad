@@ -12,7 +12,7 @@ from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 
 struct Value():
     var data: ArcPointer[Float32]
-    var grad : Float32
+    var grad :  ArcPointer[Float32]
 
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
@@ -24,7 +24,7 @@ struct Value():
     fn __init__(inout self, data: ArcPointer[Float32]):
         
         self.data = data
-        self.grad = Float32(0)
+        self.grad =  ArcPointer[Float32](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev = List[ArcPointer[Value]]()
@@ -35,7 +35,7 @@ struct Value():
     fn __init__(inout self, data: Float32):
         
         self.data = ArcPointer[Float32](data)
-        self.grad = Float32(0)
+        self.grad =  ArcPointer[Float32](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev = List[ArcPointer[Value]]()
@@ -46,7 +46,7 @@ struct Value():
     fn __init__(inout self, data: ArcPointer[Float32], prev1: Value, op: String):
         
         self.data = data
-        self.grad = Float32(0)
+        self.grad =  ArcPointer[Float32](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
@@ -57,7 +57,7 @@ struct Value():
 
     fn __init__(inout self, data: ArcPointer[Float32], prev1: Value, prev2: Value, op: String):
         self.data = data
-        self.grad = Float32(0)
+        self.grad =  ArcPointer[Float32](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
@@ -86,8 +86,8 @@ struct Value():
         #self =  existing
       
     fn backward_add(mut self):
-        self._prev[0][].grad += self.grad
-        self._prev[1][].grad += self.grad
+        self._prev[0][].grad[] += self.grad[]
+        self._prev[1][].grad[] += self.grad[]
 
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (ArcPointer[Float32](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
@@ -133,8 +133,8 @@ struct Value():
         return other * (self ** -1)
     
     fn backward_mul(mut self):
-        self._prev[0][].grad += self._prev[1][].data[] * self.grad
-        self._prev[1][].grad += self._prev[0][].data[] * self.grad
+        self._prev[0][].grad[] += self._prev[1][].data[] * self.grad[]
+        self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
 
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (ArcPointer[Float32](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
@@ -151,10 +151,11 @@ struct Value():
         return self.__mul__(other)
     
     fn __eq__(self, other: Self) -> Bool:
-        return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
+        #return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
+        return self.data.__is__(other.data) 
 
     fn backward_pow(mut self):
-        self._prev[0][].grad += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad
+        self._prev[0][].grad[] += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad[]
 
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data[] ** other.data[]), prev1 = self, prev2 = other, op = '**')
@@ -166,7 +167,7 @@ struct Value():
         return self ** v
 
     fn backward_relu(mut self):
-        self._prev[0][].grad += (Float32(0) if self.data[] < 0 else self.grad) 
+        self._prev[0][].grad[] += (Float32(0) if self.data[] < 0 else self.grad[]) 
 
 
     fn relu(self) -> Value:
@@ -177,54 +178,59 @@ struct Value():
     @staticmethod
     # Validate UnsafePointer[List[UnsafePointer[Value]]]
     # mut makes the changes visible to the calle
-    fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
+    #fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
+    fn build_topo(self_ptr: ArcPointer[Value], mut visited: ArcPointer[List[ArcPointer[Value]]], mut topo: ArcPointer[List[ArcPointer[Value]]]):
 
         print("Build topo")
 
         #if UnsafePointer[Value].address_of(self_ptr) in visited:
         #    return
         #if ArcPointer[Value].address_of(self_ptr[]) in visited:
-        for vis in visited:
-            if self_ptr.__is__(vis[]):
+        for vis in visited[]:
+            #if self_ptr.__is__(vis[][]):
+            if self_ptr[] == vis[][]:
                 return
             
         print("Entering not visited")
         #visited.append(UnsafePointer.address_of(self_ptr))
-        visited.append(self_ptr)
-        print(len(visited))
+        visited[].append(self_ptr)
+        print(len(visited[]))
         if len(self_ptr[]._prev) > 0:
             print("Entered _prev1 != UnsafePointer[Value]()")
-            Value.build_topo(self_ptr[]._prev[0][], visited, topo)
+            Value.build_topo(self_ptr[]._prev[0], visited, topo)
 
         if len(self_ptr[]._prev) == 2:
             print("Entered _prev2 != UnsafePointer[Value]()")
-            Value.build_topo(self_ptr[]._prev[1][], visited, topo)
+            Value.build_topo(self_ptr[]._prev[1], visited, topo)
         
         #topo.append(UnsafePointer[Value].address_of(self_ptr))
-        topo.append(self_ptr)
-        print(len(topo))
+        topo[].append(self_ptr)
+        print(len(topo[]))
 
     fn backward(mut self):
         # Maybe this needs to be a pointer, we'll see
-        var visited = List[ArcPointer[Value]]()
-        var topo = List[ArcPointer[Value]]()
+        #var visited = List[ArcPointer[Value]]()
+        var visited = ArcPointer[List[ArcPointer[Value]]](List[ArcPointer[Value]]())
+        #var topo = List[ArcPointer[Value]]()
+        var topo = ArcPointer[List[ArcPointer[Value]]](List[ArcPointer[Value]]())
 
         print("previous topo")
-        print(len(topo))
-        print(len(visited))
+        print(len(topo[]))
+        print(len(visited[]))
 
         var self_ref = ArcPointer[Value](self)
 
         Value.build_topo(self_ref, visited, topo)
 
-        self_ref[].grad = Float32(1.0)
+        #self_ref[].grad = Float32(1.0)
         #topo[-1][].grad = Float32(1.0)
+        self.grad[] = Float32(1)
 
         print(repr(self))
-        print(repr(topo[-1][]))
+        print(repr(topo[][-1][]))
         print("================")
 
-        for v_ptr in reversed(topo):
+        for v_ptr in reversed(topo[]):
             print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             var v = v_ptr[][]
@@ -259,10 +265,10 @@ struct Value():
 
     
     fn __print(self):
-        print("data: ", self.data[], "grad: ", self.grad, "Op: ", self._op)
+        print("data: ", self.data[], "grad: ", self.grad[], "Op: ", self._op)
     
     fn __repr__(self) -> String:
-        return "data: " + str(self.data[]) + " | grad: " + str(self.grad) + " | Op: " + self._op
+        return "data: " + str(self.data[]) + " | grad: " + str(self.grad[]) + " | Op: " + self._op
     
     fn destroy(owned self):
         """Owned assures we get the unique ownership of the value, so we can free it."""

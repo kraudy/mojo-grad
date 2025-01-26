@@ -95,14 +95,21 @@ fn main():
         assert_equal(c3.data[], -2.0, "c2 should be -2.0")
 
         d3 = a3 * b3 + b3**3 
-        #assert_equal(d3.data, 0.0, "d3 should be 0.0")
+        assert_equal(d3.data[], 0.0, "d3 should be 0.0")
+
+        c3 += c3 + 1 
+        assert_equal(c3.data[], -3.0, "c3 should be -3.0")
+
+        c3 += 1 + c3 + (-a3) 
+        assert_equal(c3.data[], -1.0, "c3 should be -1.0")
         # Here is the prolem b3 should update its gradient to -4 and 12 = 8 but it points
         # to different objects and the original is not even affected
 
         try:
-            d3.backward()
-            print(repr(a3))
+            c3.backward()
+            print("Results")
             print(repr(b3))
+            print(repr(a3))
         finally:
             a3.destroy()
             b3.destroy() 
@@ -116,7 +123,7 @@ fn main():
 
     try:
         #test1()
-        test2()
-        #test3()
+        #test2()
+        test3()
     except e:
         print(e)
