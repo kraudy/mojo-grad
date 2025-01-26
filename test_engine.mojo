@@ -84,9 +84,25 @@ fn main():
         b.destroy() 
         c.destroy()
         d.destroy()
+    
+    fn test3() raises:
+        """Karpathy sanity check"""
+        var x = Value(data = -4.0)
+        var z = 2 * x + 2 + x
+        var q = z.relu() + z * x
+        var h = (z * z).relu()
+        var y = h + q + q * x
+        assert_equal(y.data[], -20.0, "y data should be -20")
+        
+        y.backward()
+        print("Results =============")
+        assert_equal(x.grad[], 46.0, "x grad should be 46.0")
+        print(repr(x))
+
 
     try:
         test1()
         test2()
+        test3()
     except e:
         print(e)
