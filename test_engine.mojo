@@ -102,11 +102,9 @@ fn main():
 
         c3 += 1 + c3 + (-a3) 
         assert_equal(c3.data[], -1.0, "c3 should be -1.0")
-        # Here is the prolem b3 should update its gradient to -4 and 12 = 8 but it points
-        # to different objects and the original is not even affected
 
         d3 += d3 * 2 + (b3 + a3).relu() 
-        assert_equal(d3.data[], 0.0, "d3 should b3 0.0") # 0 b3cause of relu
+        assert_equal(d3.data[], 0.0, "d3 should b3 0.0")
 
         d3 += 3 * d3 + (b3 - a3).relu() 
         assert_equal(d3.data[], 6.0, "d3 should b3 6.0")
@@ -126,6 +124,8 @@ fn main():
         try:
             g3.backward()
             print("Results")
+            assert_equal(b3.grad[], 645.5773, "b3 grad should be almost 645.5773")
+            assert_equal(a3.grad[], 138.83382, "a3 grad should be almost 138.83382")
             print(repr(b3))
             print(repr(a3))
         finally:
