@@ -111,8 +111,20 @@ fn main():
         d3 += 3 * d3 + (b3 - a3).relu() 
         assert_equal(d3.data[], 6.0, "d3 should b3 6.0")
 
+        e3 = c3 - d3 
+        assert_equal(e3.data[], -7.0, "e3 should be -7.0")
+
+        f3 = e3**2 
+        assert_equal(f3.data[], 49.0, "f3 should be 49.0")
+
+        g3 = f3 / 2.0
+        assert_equal(g3.data[], 24.5, "g3 should be 24.5")
+
+        g3 += 10.0 / f3
+        assert_equal(g3.data[], 24.704082, "g3 should be almost 24.7041")
+
         try:
-            d3.backward()
+            g3.backward()
             print("Results")
             print(repr(b3))
             print(repr(a3))
