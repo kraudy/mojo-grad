@@ -167,11 +167,14 @@ struct Value():
         return self ** v
 
     fn backward_relu(mut self):
-        self._prev[0][].grad[] += (Float32(0) if self.data[] < 0 else self.grad[]) 
+        if self.data[] > 0:
+            self._prev[0][].grad[] += self.grad[]
+        else:
+            self._prev[0][].grad[] += 0
 
 
     fn relu(self) -> Value:
-        var out = Value(data = (Float32(0) if self.data[] < 0 else self.data), prev1 = self, op = 'ReLu')
+        var out = Value(data = (Float32(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
         
         return out
 
