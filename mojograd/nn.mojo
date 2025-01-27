@@ -67,4 +67,20 @@ struct Layer:
             out.append(self.neurons[i][](x = x))
         
         return out
+    
+    fn parameters(self) -> List[ArcPointer[Value]]:
+        var out = List[ArcPointer[Value]]()
+        for n in self.neurons:
+            for p in n[][].parameters():
+                out.append(p[])
+
+        return out
+    
+    fn __repr__(self) -> String:
+        var neurons_repr = String("Layer of [" )
+        for i in range(len(self.neurons)):
+            neurons_repr += ", " + repr(self.neurons[i][])
+        neurons_repr += "]"
+
+        return neurons_repr
 
