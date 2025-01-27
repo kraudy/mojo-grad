@@ -6,7 +6,7 @@ fn main():
     fn test1() raises:
         var a = Value(data = 2.0)
         var b = Value(data = 3.0)
-        var c = Float32(2.0)
+        var c = Float64(2.0)
 
         var d = b ** c
         assert_equal(d.data[], 9.0, "d should be 9.0")
@@ -65,13 +65,13 @@ fn main():
         assert_equal(g.data[], 24.5, "g should be 24.5")
 
         g += 10.0 / f
-        assert_equal(g.data[], 24.704082, "g should be almost 24.7041")
+        assert_equal(g.data[], 24.70408163265306, "g should be almost 24.70408163265306")
 
         try:
             g.backward()
             print("Results ===============================")
-            assert_equal(b.grad[], 645.5773, "b grad should be almost 645.5773")
-            assert_equal(a.grad[], 138.83382, "a grad should be almost 138.83382")
+            assert_equal(b.grad[], 645.5772594752186, "b grad should be almost 645.5772594752186")
+            assert_equal(a.grad[], 138.83381924198252, "a grad should be almost 138.83381924198252")
             print(repr(b))
             print(repr(a))
         finally:

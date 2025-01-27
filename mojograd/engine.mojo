@@ -9,8 +9,8 @@ from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 # Validate alias : fn() escaping -> None, alignment=1
 
 struct Value():
-    var data: ArcPointer[Float32]
-    var grad :  ArcPointer[Float32]
+    var data: ArcPointer[Float64]
+    var grad :  ArcPointer[Float64]
 
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
@@ -19,10 +19,10 @@ struct Value():
 
     var _op : String
 
-    fn __init__(inout self, data: ArcPointer[Float32]):
+    fn __init__(inout self, data: ArcPointer[Float64]):
         
         self.data = data
-        self.grad =  ArcPointer[Float32](0)
+        self.grad =  ArcPointer[Float64](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev = List[ArcPointer[Value]]()
@@ -30,10 +30,10 @@ struct Value():
 
         self._op = String('') 
 
-    fn __init__(inout self, data: Float32):
+    fn __init__(inout self, data: Float64):
         
-        self.data = ArcPointer[Float32](data)
-        self.grad =  ArcPointer[Float32](0)
+        self.data = ArcPointer[Float64](data)
+        self.grad =  ArcPointer[Float64](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev = List[ArcPointer[Value]]()
@@ -41,10 +41,10 @@ struct Value():
 
         self._op = String('') 
 
-    fn __init__(inout self, data: ArcPointer[Float32], prev1: Value, op: String):
+    fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, op: String):
         
         self.data = data
-        self.grad =  ArcPointer[Float32](0)
+        self.grad =  ArcPointer[Float64](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
@@ -53,9 +53,9 @@ struct Value():
 
         self._op = op
 
-    fn __init__(inout self, data: ArcPointer[Float32], prev1: Value, prev2: Value, op: String):
+    fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, prev2: Value, op: String):
         self.data = data
-        self.grad =  ArcPointer[Float32](0)
+        self.grad =  ArcPointer[Float64](0)
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
@@ -88,16 +88,16 @@ struct Value():
         self._prev[1][].grad[] += self.grad[]
 
     fn __add__(self, other: Value) -> Value:
-        var out = Value(data = (ArcPointer[Float32](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
+        var out = Value(data = (ArcPointer[Float64](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
 
         return out
 
-    fn __add__(self, other: Float32) -> Value:
+    fn __add__(self, other: Float64) -> Value:
         # We are only making the conversion and reusing the value __add__ logic
         var v = Value(other)
         return self + v
     
-    fn __radd__(self, other: Float32) -> Value:
+    fn __radd__(self, other: Float64) -> Value:
         # When adding the order is indifferent
         return self.__add__(other)
 
@@ -108,26 +108,26 @@ struct Value():
         var out = self + other
         self = out
         
-    fn __iadd__ (inout self, other: Float32):
+    fn __iadd__ (inout self, other: Float64):
         var out = self + other
         self = out
     
     fn __sub__(self, other: Value) -> Value:
         return self + (- other)
 
-    fn __sub__(self, other: Float32) -> Value:
+    fn __sub__(self, other: Float64) -> Value:
         return self + (- other)
 
-    fn __rsub__(self, other: Float32) -> Value:
+    fn __rsub__(self, other: Float64) -> Value:
         return other + (- self)
 
     fn __truediv__(self, other: Value) -> Value:
         return self * (other ** -1)
 
-    fn __truediv__(self, other: Float32) -> Value:
+    fn __truediv__(self, other: Float64) -> Value:
         return self * (other ** -1)
 
-    fn __rtruediv__(self, other: Float32) -> Value:
+    fn __rtruediv__(self, other: Float64) -> Value:
         return other * (self ** -1)
     
     fn backward_mul(mut self):
@@ -135,16 +135,16 @@ struct Value():
         self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
 
     fn __mul__(self, other: Value) -> Value:
-        var out = Value(data = (ArcPointer[Float32](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
+        var out = Value(data = (ArcPointer[Float64](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
 
         return out
 
-    fn __mul__(self, other: Float32) -> Value:
+    fn __mul__(self, other: Float64) -> Value:
         # We are only making the conversion and reusing the value __mul__ logic
         var v = Value(other)
         return self * v
     
-    fn __rmul__(self, other: Float32) -> Value:
+    fn __rmul__(self, other: Float64) -> Value:
         # When adding the order is indifferent
         return self.__mul__(other)
     
@@ -160,7 +160,7 @@ struct Value():
 
         return out
     
-    fn __pow__(self, other: Float32) -> Value:
+    fn __pow__(self, other: Float64) -> Value:
         var v = Value(other)
         return self ** v
 
@@ -172,7 +172,7 @@ struct Value():
 
 
     fn relu(self) -> Value:
-        var out = Value(data = (Float32(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
+        var out = Value(data = (Float64(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
         
         return out
 
@@ -223,9 +223,9 @@ struct Value():
 
         Value.build_topo(self_ref, visited, topo)
 
-        #self_ref[].grad = Float32(1.0)
-        #topo[-1][].grad = Float32(1.0)
-        self.grad[] = Float32(1)
+        #self_ref[].grad = Float64(1.0)
+        #topo[-1][].grad = Float64(1.0)
+        self.grad[] = Float64(1)
 
         print(repr(self))
         print(repr(topo[][-1][]))

@@ -21,7 +21,6 @@ struct Neuron:
         self.w = List[ArcPointer[Value]]()
         for i in range(nin):
             var rand = random_float64(-1.0, 1.0)
-            var rand64 = Float64(rand)
             # Need to fix Value Float32 to Float64
-            self.w.append(ArcPointer[Value](Value(rand64)))
+            self.w.append(ArcPointer[Value](Value(rand)))
         self.b = Value(0)
