@@ -16,7 +16,7 @@ struct Module:
 struct Neuron:
     var w : List[ArcPointer[Value]]
     var b : ArcPointer[Value]
-    var nonlin : Bool
+    var nonlin : ArcPointer[Bool]
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         # I think w and b should have the same length
@@ -34,16 +34,37 @@ struct Neuron:
         for i in range(len(self.w)):
             act.data[] += (self.w[i][].data[] * x[i][].data[])
 
-        if self.nonlin:
+        if self.nonlin[]:
             return act.relu()
         else:
             return act
+    
+    fn __moveinit__(out self, owned other: Neuron):
+        self.w = other.w
+        self.b = other.b
+        self.nonlin = other.nonlin
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         #TODO: Check this operation
         return self.w + self.b
       
     fn __repr__(self) -> String:
-        var neuron_type = "ReLU" if self.nonlin else "Linear"
+        var neuron_type = "ReLU" if self.nonlin[] else "Linear"
         return neuron_type + "Neuron(" + str(len(self.w)) + ")"
+
+struct Layer:
+    var neurons : List[ArcPointer[Neuron]]
+
+    fn __init__(out self, nin: Int, nout: Int, kwargs: Bool):
+        self.neurons = List[ArcPointer[Neuron]]()
+        for _ in range(nout):
+            self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
+    
+    #TODO: Validate where we need a List of Value and a List of Neurons
+    fn __call__(self, x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
+        var out = List[ArcPointer[Value]]()
+        for i in range(len(self.neurons)):
+            out.append(self.neurons[i][](x = x))
+        
+        return out
 
