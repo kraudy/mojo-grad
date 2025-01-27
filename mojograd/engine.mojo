@@ -1,7 +1,5 @@
 
 """ 
-Here is what i need to do, the objects can be cloned, it does not matter if the class fields keep pointing 
-to the same data
 """
 
 from collections import Optional, List, Dict, InlineList, Set
