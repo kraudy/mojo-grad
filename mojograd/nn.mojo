@@ -75,6 +75,9 @@ struct Layer:
                 out.append(p[])
 
         return out
+
+    fn __moveinit__(out self, owned other: Layer):
+        self.neurons = other.neurons
     
     fn __repr__(self) -> String:
         var neurons_repr = String("Layer of [" )
@@ -83,4 +86,35 @@ struct Layer:
         neurons_repr += "]"
 
         return neurons_repr
+
+struct MLP:
+    var layers : List[ArcPointer[Layer]]
+    fn __init__(out self, nin: Int, nouts: List[Int]):
+        var sz = List[Int](nin) + nouts
+        self.layers = List[ArcPointer[Layer]]()
+
+        for i in range(len(nouts)):
+            self.layers.append(Layer(nin = sz[i], nout = sz[i + 1], kwargs = (i != len(nouts) - 1)))
+
+    fn __call__(self, mut x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
+        for layer in self.layers:
+            x = layer[][](x)
+        
+        return x
+    
+    fn parameters(self) -> List[ArcPointer[Value]]:
+        var out = List[ArcPointer[Value]]()
+        for layer in self.layers:
+            for p in layer[][].parameters():
+                out.append(p[])
+
+        return out
+    
+    fn __repr__(self) -> String:
+        var mlp_repr = String("MLP of [" )
+        for i in range(len(self.layers)):
+            mlp_repr += ", " + repr(self.layers[i][])
+        mlp_repr += "]"
+
+        return mlp_repr
 
