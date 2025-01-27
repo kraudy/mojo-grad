@@ -12,6 +12,7 @@ struct Value():
     var data: ArcPointer[Float64]
     var grad :  ArcPointer[Float64]
 
+    #TODO: Check if this scope function can be now implemented
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
     # var _prev :  Set[Value]
@@ -177,9 +178,8 @@ struct Value():
         return out
 
     @staticmethod
-    # Validate UnsafePointer[List[UnsafePointer[Value]]]
-    # mut makes the changes visible to the calle
     #fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
+    #TODO: Check if ArcPointer[List[ArcPointer[Value]]] is needed or just List[ArcPointer[Value]] 
     fn build_topo(self_ptr: ArcPointer[Value], mut visited: ArcPointer[List[ArcPointer[Value]]], mut topo: ArcPointer[List[ArcPointer[Value]]]):
 
         print("Build topo")
@@ -209,8 +209,7 @@ struct Value():
         print(len(topo[]))
 
     fn backward(mut self):
-        # Maybe this needs to be a pointer, we'll see
-        #var visited = List[ArcPointer[Value]]()
+        #TODO: Check: visited = List[ArcPointer[Value]]()
         var visited = ArcPointer[List[ArcPointer[Value]]](List[ArcPointer[Value]]())
         #var topo = List[ArcPointer[Value]]()
         var topo = ArcPointer[List[ArcPointer[Value]]](List[ArcPointer[Value]]())
@@ -219,12 +218,11 @@ struct Value():
         print(len(topo[]))
         print(len(visited[]))
 
+        #TODO: Validate if this pointer is needes
         var self_ref = ArcPointer[Value](self)
 
         Value.build_topo(self_ref, visited, topo)
 
-        #self_ref[].grad = Float64(1.0)
-        #topo[-1][].grad = Float64(1.0)
         self.grad[] = Float64(1)
 
         print(repr(self))
@@ -257,29 +255,8 @@ struct Value():
                 v.backward_relu()
                 print(repr(v._prev[0][]))
 
-          
-            #if v._func != UnsafePointer[fn() escaping -> None, alignment=1]():
-            #    v._func[]()
-            
-            #print(repr(v._prev1[]))
-            #print(repr(v._prev2[]))
-
-    
     fn __print(self):
         print("data: ", self.data[], "grad: ", self.grad[], "Op: ", self._op)
     
     fn __repr__(self) -> String:
         return "data: " + str(self.data[]) + " | grad: " + str(self.grad[]) + " | Op: " + self._op
-    
-    fn destroy(owned self):
-        """Owned assures we get the unique ownership of the value, so we can free it."""
-        #if self._prev1 != UnsafePointer[Value]():
-        #    self._prev1.destroy_pointee()
-        #    self._prev1.free()
-            
-        #if self._prev2 != UnsafePointer[Value]():
-        #    self._prev2.destroy_pointee()
-        #    self._prev2.free()
-        pass
-
-    

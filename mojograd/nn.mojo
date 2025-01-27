@@ -38,4 +38,12 @@ struct Neuron:
             return act.relu()
         else:
             return act
+    
+    fn parameters(self) -> List[ArcPointer[Value]]:
+        #TODO: Check this operation
+        return self.w + self.b
+      
+    fn __repr__(self) -> String:
+        var neuron_type = "ReLU" if self.nonlin else "Linear"
+        return neuron_type + "Neuron(" + str(len(self.w)) + ")"
 

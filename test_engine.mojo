@@ -14,25 +14,14 @@ fn main():
         var e = a + c
         assert_equal(e.data[], 4.0, "e should be 4.0")
         
-        try:
-            e.backward()
-            print("Results =============")
-            assert_equal(b.grad[], 0.0, "b grad should be 0.0")
-            assert_equal(a.grad[], 1.0, "a grad should be 1.0")
+        e.backward()
+        print("Results =============")
+        assert_equal(b.grad[], 0.0, "b grad should be 0.0")
+        assert_equal(a.grad[], 1.0, "a grad should be 1.0")
 
-            print(repr(a))
-            print(repr(b))
+        print(repr(a))
+        print(repr(b))
 
-        finally:
-            a.destroy()
-            b.destroy()
-            d.destroy()
-            e.destroy()
-
-        a.destroy()
-        b.destroy()
-        d.destroy()
-        e.destroy()
     
     fn test2() raises:
         a = Value(-4.0)
@@ -67,23 +56,13 @@ fn main():
         g += 10.0 / f
         assert_equal(g.data[], 24.70408163265306, "g should be almost 24.70408163265306")
 
-        try:
-            g.backward()
-            print("Results ===============================")
-            assert_equal(b.grad[], 645.5772594752186, "b grad should be almost 645.5772594752186")
-            assert_equal(a.grad[], 138.83381924198252, "a grad should be almost 138.83381924198252")
-            print(repr(b))
-            print(repr(a))
-        finally:
-            a.destroy()
-            b.destroy() 
-            c.destroy()
-            d.destroy()
+        g.backward()
+        print("Results ===============================")
+        assert_equal(b.grad[], 645.5772594752186, "b grad should be almost 645.5772594752186")
+        assert_equal(a.grad[], 138.83381924198252, "a grad should be almost 138.83381924198252")
+        print(repr(b))
+        print(repr(a))
 
-        a.destroy()
-        b.destroy() 
-        c.destroy()
-        d.destroy()
     
     fn test3() raises:
         """Karpathy sanity check"""
