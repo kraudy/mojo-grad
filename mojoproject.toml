@@ -10,3 +10,5 @@ version = "0.1.0"
 
 [dependencies]
 max = ">=24.6.0,<25"
+scikit-learn = ">=1.6.1,<2"
+matplotlib = ">=3.10.0,<4"
