@@ -31,7 +31,11 @@ struct Neuron:
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
         var act = Value(data = self.b[].data[])
 
+        #TODO: Check vector operation
+        print("Neuron class =========")
+        print("len w : " + str(len(self.w)))
         for i in range(len(self.w)):
+            print(str(act.data[]))
             act.data[] += (self.w[i][].data[] * x[i][].data[])
 
         if self.nonlin[]:
@@ -49,8 +53,8 @@ struct Neuron:
         return self.w + self.b
       
     fn __repr__(self) -> String:
-        var neuron_type = "ReLU" if self.nonlin[] else "Linear"
-        return neuron_type + "Neuron(" + str(len(self.w)) + ")"
+        var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
+        return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
 struct Layer:
     var neurons : List[ArcPointer[Neuron]]

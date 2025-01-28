@@ -1,4 +1,7 @@
 from mojograd.engine import Value 
+from mojograd.nn import Neuron
+from memory import ArcPointer
+
 from testing import assert_almost_equal, assert_true, assert_equal
 from python import Python
 
