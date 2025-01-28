@@ -54,6 +54,7 @@ struct Neuron:
       
     fn __repr__(self) -> String:
         var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
+        # We can add Value repr fo w if the full detail is wanted
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
 struct Layer:
@@ -105,6 +106,9 @@ struct MLP:
             x = layer[][](x)
         
         return x
+
+    fn __copyinit__(out self,  other: MLP):
+        self.layers = other.layers
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         var out = List[ArcPointer[Value]]()
