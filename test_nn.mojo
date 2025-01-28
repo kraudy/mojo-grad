@@ -58,7 +58,7 @@ fn main():
         # Adjust y to be -1 or 1
         y = y * 2 - 1
 
-        fn loss(batch_size: PythonObject) raises:
+        fn loss(batch_size: PythonObject = None) raises:
             var Xb : PythonObject
             var yb : PythonObject
 
@@ -73,23 +73,57 @@ fn main():
                 yb = np.take(y, indices, axis=0)
             
             var inputs = List[List[ArcPointer[Value]]]()
+            print("Inputs ===============")
             for i in range(Xb.shape[0]):
+                print(i)
                 var row = List[ArcPointer[Value]]()
                 for j in range(Xb.shape[1]):
+                    print(j)
                     row.append(ArcPointer[Value](Value(Float64(Xb[i, j]))))
+                    print(Float64(Xb[i, j]))
                 inputs.append(row)
 
             #var scores = List[ArcPointer[Value]]()
             # This is supposed to be the forward
             var scores = List[List[ArcPointer[Value]]]()
+            print("Scores ===============")
             for input in inputs:
+                for i in input[]:
+                    print(repr(i[][]))
                 scores.append(model(x = input[]))
-    
+
+            var losses = List[ArcPointer[Value]]()
+            print("Losses ===============")
+            for i in range(len(scores)):
+                var yi = Float64(yb[i])
+                var scorei = scores[i]
+                #losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei)).relu()))
+
+        #TODO: This needs to be fixed
+        loss()
+
+    fn test_neuron() raises:
+        # Create Neuron with 2 rand weigths Value and 0 bias Value
+        var neuron = Neuron(2)    
+        # This is the input to the neuron
+        var x = List[ArcPointer[Value]](Value(2), Value(3))
+
+        #TODO: Note how X and W must have the same length. Maybe this can be changed
+        var act = neuron(x)
+        # Back prop un output Value of the Neuron
+        print("Before Backward ==============")
+        act.backward()
+        print("After Backward ==============")
+        print(repr(act))
+        print(repr(act._prev[0][]))
+        print(repr(x[0][]))
+
 
     try:
-        test1()
+        #test1()
         #showmoons()
-        create_model()
+        #create_model()
+        test_neuron()
         
 
     except e:

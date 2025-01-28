@@ -19,7 +19,6 @@ struct Neuron:
     var nonlin : ArcPointer[Bool]
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
-        # I think w and b should have the same length
         self.w = List[ArcPointer[Value]]()
         for _ in range(nin):
             var rand = random_float64(-1.0, 1.0)
@@ -29,11 +28,13 @@ struct Neuron:
         self.nonlin = nonlin
 
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
+        """X is an array that needs to be multiplied by W array."""
         var act = Value(data = self.b[].data[])
 
         #TODO: Check vector operation
         print("Neuron class =========")
         print("len w : " + str(len(self.w)))
+        # W should have the same length as X
         for i in range(len(self.w)):
             print(str(act.data[]))
             act.data[] += (self.w[i][].data[] * x[i][].data[])
