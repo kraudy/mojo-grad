@@ -117,6 +117,8 @@ fn main():
         print(repr(act))
         print(repr(act._prev[0][]))
         print(repr(x[0][]))
+        print("Neuron")
+        print(repr(neuron.__repr__(True)))
 
 
     try:

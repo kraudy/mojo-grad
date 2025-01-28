@@ -28,7 +28,10 @@ struct Neuron:
         self.nonlin = nonlin
 
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
-        """X is an array that needs to be multiplied by W array."""
+        """
+        X is an array that needs to be multiplied by W array.
+        The output of the forward pass of a neuron is a Value.
+        """
         var act = Value(data = self.b[].data[])
 
         #TODO: Check vector operation
@@ -55,6 +58,18 @@ struct Neuron:
       
     fn __repr__(self) -> String:
         var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
+        # We can add Value repr fo w if the full detail is wanted
+        return neuron_type + " Neuron(" + str(len(self.w)) + ")"
+      
+    fn __repr__(self, full: Bool = False) -> String:
+        var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
+
+        if full:
+            neuron_type += "["
+            for i in range(len(self.w)):
+                neuron_type += ", " + repr(self.w[i][])
+            neuron_type += "]"
+
         # We can add Value repr fo w if the full detail is wanted
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
