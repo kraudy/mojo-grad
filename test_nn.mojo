@@ -49,6 +49,10 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
         var scorei = scores[i]
         #losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei)).relu()))
 
+fn get_numpy_value(numpy_array: PythonObject) raises -> Float64:
+    var item = numpy_array.item()
+    return Float64(item)
+
 fn create_model() raises:
     # initialize a model 
     model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network
@@ -88,6 +92,8 @@ fn create_model() raises:
         yb = np.take(y, indices, axis=0)
     
     var inputs = List[List[ArcPointer[Value]]]()
+    var mojo_list = List[List[Float64]]()
+
     print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
     #for i in range(Int(100)):
@@ -99,24 +105,29 @@ fn create_model() raises:
         print("This should break")
         print(Xb[0, 1])
         var row = List[ArcPointer[Value]]()
+        var row_list = List[Float64]()
         for j in range(Int(Xb.shape[1])):
         #for j in range(Int(2)):
             print("Inner For")
             #print(Int(Xb.shape[1]))
             #print(Xb.shape[1])
             print(j)
-            var test = Xb.item(i, j)
-            print(test)
-            #var mifloat :Float64 = test.py_object.
+            #var value: Float64 = Float64(Xb.item(i, j)) # Error
+            var value: Float64 = Xb.item(i, j).to_float64()
+            row_list.append(value)
+            #Xb.itemset((i, j), test)
+            print(value)
 
             #row.append(ArcPointer[Value](Value(Float64(Xb[i, j]))))
             #row.append(ArcPointer[Value](Value(Xb[i, j])))
             #row.append(ArcPointer[Value](Value(Float64(test))))
+            row.append(ArcPointer[Value](Value(value)))
 
-        #inputs.append(row)
+        inputs.append(row)
     
     print("Passed =========================")
-
+    print("len input: ", len(inputs))
+    
     make_moons = None
     X = None
     y = None
