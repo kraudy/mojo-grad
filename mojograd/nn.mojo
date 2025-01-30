@@ -139,6 +139,9 @@ struct MLP:
 
     fn __copyinit__(out self,  other: MLP):
         self.layers = other.layers
+
+    fn __moveinit__(out self, owned other: MLP):
+        self.layers = other.layers
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         var out = List[ArcPointer[Value]]()
