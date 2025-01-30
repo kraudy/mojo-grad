@@ -40,7 +40,8 @@ struct Neuron:
         # W should have the same length as X
         for i in range(len(self.w)):
             print(str(act.data[]))
-            act.data[] += (self.w[i][].data[] * x[i][].data[])
+            #act.data[] += (self.w[i][].data[] * x[i][].data[])
+            act += (self.w[i][] * x[i][])
 
         if self.nonlin[]:
             return act.relu()
@@ -88,7 +89,6 @@ struct Layer:
         for _ in range(nout):
             self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
     
-    #TODO: Validate where we need a List of Value and a List of Neurons
     fn __call__(self, x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
         """When the layer is called, it activates all the layer's Neurons with the 
         input data."""
@@ -98,7 +98,8 @@ struct Layer:
         
         return out
         """We pass Values between layer, not Neurons. The Neuron is needed to 
-        transform the input into the output"""
+        transform the input into the output in the forward pass and update grads
+        in the backprop."""
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         var out = List[ArcPointer[Value]]()
@@ -130,9 +131,11 @@ struct MLP:
 
     fn __call__(self, mut x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
         for layer in self.layers:
+            """Here we activate the layer and assign the output to the input of the next."""
             x = layer[][](x)
         
         return x
+        """The output can be a List of one value or multiple. This deppends on the last layer output"""
 
     fn __copyinit__(out self,  other: MLP):
         self.layers = other.layers

@@ -121,25 +121,46 @@ fn main():
         print(repr(neuron.__repr__(True)))
 
     fn test_layer() raises:
+        # 2 Value inputs
         var x = List[ArcPointer[Value]](Value(2), Value(3))
+        # Layer of 1 Neuron with 2 weigts
         var l = Layer(2, 1)
         # Forward
         var res = l(x)
-        for v in res:
+        print("Before backward")
+        print(repr(res[0][]))
+        res[0][].backward()
+        print("After backward")
+        print(repr(res[0][]))
+        for v in x:
+            print("Input grad")
             print(repr(v[][]))
-            v[][].backward()
-            print(repr(v[][]))
+        for v in l.neurons:
+            print("Layer neurons")
+            print(v[][].__repr__(True))
         print("Layer")
         print(repr(l))
 
     fn test_mlp() raises:
-        var nouts = List[Int](16, 16, 1)
+        #var nouts = List[Int](16, 16, 1)
+        var nouts = List[Int](4, 4, 1)
         var x = List[ArcPointer[Value]](Value(2), Value(3))
         var m = MLP(2, nouts)
         var res = m(x)
 
-        for v in res:
+        print("Before backward =======================")
+        print(repr(res[0][]))
+        res[0][].backward()
+        print("After backward =======================")
+        print(repr(res[0][]))
+        for v in x:
+            print("Input grad")
             print(repr(v[][]))
+        for v in m.layers:
+            print("MLP Layers")
+            print(repr(v[][]))
+        print("MLP")
+        print(repr(m))
 
 
 
@@ -148,7 +169,8 @@ fn main():
         #showmoons()
         #create_model()
         #test_neuron()
-        test_layer()
+        #test_layer()
+        test_mlp()
         
 
     except e:
