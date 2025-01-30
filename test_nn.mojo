@@ -1,5 +1,5 @@
 from mojograd.engine import Value 
-from mojograd.nn import Neuron, MLP
+from mojograd.nn import Neuron, MLP, Layer
 from memory import ArcPointer
 
 from testing import assert_almost_equal, assert_true, assert_equal
@@ -120,12 +120,35 @@ fn main():
         print("Neuron")
         print(repr(neuron.__repr__(True)))
 
+    fn test_layer() raises:
+        var x = List[ArcPointer[Value]](Value(2), Value(3))
+        var l = Layer(2, 1)
+        # Forward
+        var res = l(x)
+        for v in res:
+            print(repr(v[][]))
+            v[][].backward()
+            print(repr(v[][]))
+        print("Layer")
+        print(repr(l))
+
+    fn test_mlp() raises:
+        var nouts = List[Int](16, 16, 1)
+        var x = List[ArcPointer[Value]](Value(2), Value(3))
+        var m = MLP(2, nouts)
+        var res = m(x)
+
+        for v in res:
+            print(repr(v[][]))
+
+
 
     try:
         #test1()
         #showmoons()
         #create_model()
-        test_neuron()
+        #test_neuron()
+        test_layer()
         
 
     except e:

@@ -14,9 +14,11 @@ struct Module:
 
 
 struct Neuron:
+    """A Neuron receives a list of inputs and outpus a Value."""
     var w : List[ArcPointer[Value]]
     var b : ArcPointer[Value]
     var nonlin : ArcPointer[Bool]
+    """This is the function that makes the model 'learn'."""
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[ArcPointer[Value]]()
@@ -28,10 +30,8 @@ struct Neuron:
         self.nonlin = nonlin
 
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
-        """
-        X is an array that needs to be multiplied by W array.
-        The output of the forward pass of a neuron is a Value.
-        """
+        """This is basically a relation making operation.
+        len(x) should be >= len(w). Otherwise makes no sense."""
         var act = Value(data = self.b[].data[])
 
         #TODO: Check vector operation
@@ -74,20 +74,31 @@ struct Neuron:
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
 struct Layer:
+    """A Layer receives a list of inputs and applies them to all the Neurons where each
+    one returns a Value. The Layer itself returns a list of Value.
+    Note to self: A Layer has no weigths, the Neuron itself has the weights."""
     var neurons : List[ArcPointer[Neuron]]
 
-    fn __init__(out self, nin: Int, nout: Int, kwargs: Bool):
+    fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
+        # nin:  How many values will this layer receive
+        # nout: How many values will this layer output
+        # kwargs: If relu is applied to the output of every neuron
+
         self.neurons = List[ArcPointer[Neuron]]()
         for _ in range(nout):
             self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
     
     #TODO: Validate where we need a List of Value and a List of Neurons
     fn __call__(self, x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
+        """When the layer is called, it activates all the layer's Neurons with the 
+        input data."""
         var out = List[ArcPointer[Value]]()
         for i in range(len(self.neurons)):
             out.append(self.neurons[i][](x = x))
         
         return out
+        """We pass Values between layer, not Neurons. The Neuron is needed to 
+        transform the input into the output"""
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         var out = List[ArcPointer[Value]]()
