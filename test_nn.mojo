@@ -92,35 +92,21 @@ fn create_model() raises:
         yb = np.take(y, indices, axis=0)
     
     var inputs = List[List[ArcPointer[Value]]]()
-    var mojo_list = List[List[Float64]]()
 
     print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
     #for i in range(Int(100)):
-        print("First For")
-        print(Int(Xb.shape[0]))
-        print(Xb.shape[0])
+        print("Outer For")
         print(i)
-        print(Xb[0, 0])
-        print("This should break")
-        print(Xb[0, 1])
         var row = List[ArcPointer[Value]]()
         var row_list = List[Float64]()
         for j in range(Int(Xb.shape[1])):
-        #for j in range(Int(2)):
             print("Inner For")
-            #print(Int(Xb.shape[1]))
-            #print(Xb.shape[1])
             print(j)
-            #var value: Float64 = Float64(Xb.item(i, j)) # Error
             var value: Float64 = Xb.item(i, j).to_float64()
             row_list.append(value)
-            #Xb.itemset((i, j), test)
             print(value)
 
-            #row.append(ArcPointer[Value](Value(Float64(Xb[i, j]))))
-            #row.append(ArcPointer[Value](Value(Xb[i, j])))
-            #row.append(ArcPointer[Value](Value(Float64(test))))
             row.append(ArcPointer[Value](Value(value)))
 
         inputs.append(row)
@@ -134,21 +120,50 @@ fn create_model() raises:
     sklearn = None
     np = None
 
-
-    #var scores = List[ArcPointer[Value]]()
     # This is supposed to be the forward
-    #var scores = List[List[ArcPointer[Value]]]()
-    #print("Scores ===============")
-    #for input in inputs:
-    #    for i in input[]:
-    #        print(repr(i[][]))
-    #    scores.append(model(x = input[]))
+    var scores = List[List[ArcPointer[Value]]]()
+    print("Scores ===============")
+    for input in inputs:
+        for i in input[]:
+            print(repr(i[][]))
+        scores.append(model(x = input[]))
 
-    #var losses = List[ArcPointer[Value]]()
-    #print("Losses ===============")
+    var losses = List[ArcPointer[Value]]()
+    print("Losses ===============")
+    for i in range(len(scores)):
+        var yi: Float64 = yb.item(i).to_float64()
+        #var yi = Float64(yb[i])
+        var scorei = scores[i]
+        print(len(scorei))
+        print(repr(scorei[0][]))
+        # Note how the output of each list after the forward in scores is only one value
+        losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei[0][])).relu()))
+    
+    print("After calculating losses")
+    print(len(losses))
+
+    #var data_loss = ArcPointer[Value](Value(0))
+    #for loss in losses:
+    #    data_loss[] += loss[][]
+    #data_loss[] = Value(1.0 / Float64(len(losses)))
+
+    #var alpha = 1e-4
+    #var reg_loss = ArcPointer[Value](Value(0))
+    #for p in model.parameters():
+    #    reg_loss[] += (p[][] * p[][])
+    #reg_loss[] *= Value(alpha)
+    #var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
+
+    #var accuracy_count: Int = 0
     #for i in range(len(scores)):
-    #    var yi = Float64(yb[i])
-    #    var scorei = scores[i]
+    #    var yi = Float64(yb.item(i).to_float64())
+    #    var scorei = scores[i][]
+    #    if (yi > 0) == (scorei.data[] > 0):
+    #        accuracy_count += 1
+
+    #var accuracy = Float64(accuracy_count) / Float64(len(scores))
+
+    #return (total_loss, accuracy)
 
 
 fn main(): 
