@@ -92,6 +92,7 @@ fn create_model() raises:
         yb = np.take(y, indices, axis=0)
     
     var inputs = List[List[ArcPointer[Value]]]()
+    """These are the inputs to the model layers"""
 
     print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
@@ -103,6 +104,7 @@ fn create_model() raises:
         for j in range(Int(Xb.shape[1])):
             print("Inner For")
             print(j)
+            #TODO: Find a better way to do this conversion
             var value: Float64 = Xb.item(i, j).to_float64()
             row_list.append(value)
             print(value)
@@ -127,14 +129,18 @@ fn create_model() raises:
         for i in input[]:
             print(repr(i[][]))
         scores.append(model(x = input[]))
+        """Here, each list of scores becomes a 1 element list."""
+        # Maybe scores can be converted to List[ArcPointer[Value]] here
 
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
     for i in range(len(scores)):
+        #TODO: Find a better way to do this conversion
         var yi: Float64 = yb.item(i).to_float64()
         #var yi = Float64(yb[i])
         var scorei = scores[i]
         print(len(scorei))
+        # len(scorei) = 1
         print(repr(scorei[0][]))
         # Note how the output of each list after the forward in scores is only one value
         losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei[0][])).relu()))
@@ -142,26 +148,40 @@ fn create_model() raises:
     print("After calculating losses")
     print(len(losses))
 
-    #var data_loss = ArcPointer[Value](Value(0))
-    #for loss in losses:
-    #    data_loss[] += loss[][]
-    #data_loss[] = Value(1.0 / Float64(len(losses)))
+    var data_loss = ArcPointer[Value](Value(0))
+    for loss in losses:
+        data_loss[] += loss[][]
+    data_loss[] = Value(1.0 / Float64(len(losses)))
 
-    #var alpha = 1e-4
-    #var reg_loss = ArcPointer[Value](Value(0))
-    #for p in model.parameters():
-    #    reg_loss[] += (p[][] * p[][])
-    #reg_loss[] *= Value(alpha)
-    #var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
+    print("Sum of the data loss")
+    print(repr(data_loss[]))
 
-    #var accuracy_count: Int = 0
-    #for i in range(len(scores)):
-    #    var yi = Float64(yb.item(i).to_float64())
-    #    var scorei = scores[i][]
-    #    if (yi > 0) == (scorei.data[] > 0):
-    #        accuracy_count += 1
+    var alpha = 1e-4
+    var reg_loss = ArcPointer[Value](Value(0))
+    for p in model.parameters():
+        reg_loss[] += (p[][] * p[][])
+    reg_loss[] *= Value(alpha)
+    var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
 
-    #var accuracy = Float64(accuracy_count) / Float64(len(scores))
+    print("Total loss")
+    print(repr(total_loss[]))
+
+    var accuracy_count: Int = 0
+    for i in range(len(scores)):
+        #TODO: Find a better way to do this conversion
+        var yi = Float64(yb.item(i).to_float64())
+        var scorei = scores[i]
+        # len(scorei) = 1
+        print(repr(scorei[0][]))
+        if (yi > 0) == (scorei[0][].data[] > 0):
+            accuracy_count += 1
+
+    var accuracy = Float64(accuracy_count) / Float64(len(scores))
+    print("accuracy_count: ", accuracy_count)
+    print("len scores: ", len(scores))
+    print("accuracy: ", accuracy)
+
+    print("total loss: ", repr(total_loss[]), " | Accuracy: ", str(accuracy))
 
     #return (total_loss, accuracy)
 

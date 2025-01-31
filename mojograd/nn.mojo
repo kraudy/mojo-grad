@@ -23,6 +23,8 @@ struct Neuron:
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[ArcPointer[Value]]()
         for _ in range(nin):
+            """Note how we are assigning values between -1 and 1.
+            With Relu: 0 (Non probability), 1 (Certain)."""
             var rand = random_float64(-1.0, 1.0)
             self.w.append(ArcPointer[Value](Value(rand)))
 

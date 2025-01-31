@@ -148,6 +148,14 @@ struct Value():
     fn __rmul__(self, other: Float64) -> Value:
         # When adding the order is indifferent
         return self.__mul__(other)
+
+    fn __imul__ (inout self, other: Value):
+        var out = self * other
+        self = out
+        
+    fn __imul__ (inout self, other: Float64):
+        var out = self * other
+        self = out
     
     fn __eq__(self, other: Self) -> Bool:
         #return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
