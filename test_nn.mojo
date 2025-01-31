@@ -129,13 +129,30 @@ fn create_model() raises:
     # Adjust y to be -1 or 1
     y = y * 2 - 1
   
-    try:
-        #var total_loss : ArcPointer[Value], acc: Float64 = loss(ArcPointer[MLP](model), X, y)
-        var total_loss: ArcPointer[Value]
-        var acc: Float64
-        (total_loss, acc) = loss(ArcPointer[MLP](model), X, y, PythonObject(None))
-    except e:
-        print(e)
+    for k in range(100):
+        try:
+            var total_loss: ArcPointer[Value]
+            var acc: Float64
+            # forward
+            (total_loss, acc) = loss(ArcPointer[MLP](model), X, y, PythonObject(None))
+
+            # backward
+            #TODO: Implement this with trait 
+            for out in model.parameters():
+                out[][].grad[] = 0
+            total_loss[].backward()
+
+            # update (sgd)
+            var learning_rate : Float64 = 1.0 - 0.9 * k/100 
+            for p in model.parameters():
+                p[][].data[] -= learning_rate * p[][].grad[]
+                """Note how the grad is used to update the same Value data"""
+            
+            if k % 1 == 0:
+                print("Step: ", k, " | loss: ", total_loss[].data[], " | accuracy: ", acc*100)
+
+        except e:
+            print(e)
     make_moons = None
     X = None
     y = None
