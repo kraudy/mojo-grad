@@ -6,76 +6,7 @@ from testing import assert_almost_equal, assert_true, assert_equal
 from python import Python, PythonObject
 
 #fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = None) raises:
-fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises:
-    var Xb : PythonObject
-    var yb : PythonObject
-
-    var np = Python.import_module("numpy")
-
-    if batch_size is None:
-        Xb = X
-        yb = y
-    else:
-        var total_samples = Float64(X.shape[0])
-        var batch_size_int = batch_size.to_int64()
-        var indices = np.random.choice(total_samples, batch_size_int, replace=False)
-        Xb = np.take(X, indices, axis=0)
-        yb = np.take(y, indices, axis=0)
-    
-    var inputs = List[List[ArcPointer[Value]]]()
-    print("Inputs ===============")
-    for i in range(Xb.shape[0]):
-        print(i)
-        var row = List[ArcPointer[Value]]()
-        for j in range(Xb.shape[1]):
-            print(j)
-            row.append(ArcPointer[Value](Value(Float64(Xb[i, j]))))
-            print(Float64(Xb[i, j]))
-        inputs.append(row)
-
-    #var scores = List[ArcPointer[Value]]()
-    # This is supposed to be the forward
-    var scores = List[List[ArcPointer[Value]]]()
-    print("Scores ===============")
-    for input in inputs:
-        for i in input[]:
-            print(repr(i[][]))
-        scores.append(model[](x = input[]))
-
-    var losses = List[ArcPointer[Value]]()
-    print("Losses ===============")
-    for i in range(len(scores)):
-        var yi = Float64(yb[i])
-        var scorei = scores[i]
-        #losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei)).relu()))
-
-fn get_numpy_value(numpy_array: PythonObject) raises -> Float64:
-    var item = numpy_array.item()
-    return Float64(item)
-
-fn create_model() raises:
-    # initialize a model 
-    model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network
-    print(repr(model))
-    print("number of parameters", len(model.parameters()))
-
-    var sklearn = Python.import_module("sklearn.datasets")
-
-    # Generate the dataset
-    var make_moons = sklearn.make_moons
-    var result: PythonObject = make_moons(n_samples=100, noise=0.1)
-    var X: PythonObject = result[0]
-    var y: PythonObject = result[1]
-
-    # Adjust y to be -1 or 1
-    y = y * 2 - 1
-  
-    #try:
-    #    loss(ArcPointer[MLP](model), X, y)
-    #except e:
-    #    print(e)
-
-    var batch_size: PythonObject = None
+fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[ArcPointer[Value], Float64]:
     var Xb : PythonObject
     var yb : PythonObject
 
@@ -115,12 +46,6 @@ fn create_model() raises:
     
     print("Passed =========================")
     print("len input: ", len(inputs))
-    
-    make_moons = None
-    X = None
-    y = None
-    sklearn = None
-    np = None
 
     # This is supposed to be the forward
     var scores = List[List[ArcPointer[Value]]]()
@@ -128,7 +53,7 @@ fn create_model() raises:
     for input in inputs:
         for i in input[]:
             print(repr(i[][]))
-        scores.append(model(x = input[]))
+        scores.append(model[](x = input[]))
         """Here, each list of scores becomes a 1 element list."""
         # Maybe scores can be converted to List[ArcPointer[Value]] here
 
@@ -158,7 +83,7 @@ fn create_model() raises:
 
     var alpha = 1e-4
     var reg_loss = ArcPointer[Value](Value(0))
-    for p in model.parameters():
+    for p in model[].parameters():
         reg_loss[] += (p[][] * p[][])
     reg_loss[] *= Value(alpha)
     var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
@@ -183,7 +108,39 @@ fn create_model() raises:
 
     print("total loss: ", repr(total_loss[]), " | Accuracy: ", str(accuracy))
 
-    #return (total_loss, accuracy)
+    np = None
+
+    return (total_loss, accuracy)
+
+fn create_model() raises:
+    # initialize a model 
+    model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network
+    print(repr(model))
+    print("number of parameters", len(model.parameters()))
+
+    var sklearn = Python.import_module("sklearn.datasets")
+
+    # Generate the dataset
+    var make_moons = sklearn.make_moons
+    var result: PythonObject = make_moons(n_samples=100, noise=0.1)
+    var X: PythonObject = result[0]
+    var y: PythonObject = result[1]
+
+    # Adjust y to be -1 or 1
+    y = y * 2 - 1
+  
+    try:
+        #var total_loss : ArcPointer[Value], acc: Float64 = loss(ArcPointer[MLP](model), X, y)
+        var total_loss: ArcPointer[Value]
+        var acc: Float64
+        (total_loss, acc) = loss(ArcPointer[MLP](model), X, y, PythonObject(None))
+    except e:
+        print(e)
+    make_moons = None
+    X = None
+    y = None
+    sklearn = None
+
 
 
 fn main(): 
