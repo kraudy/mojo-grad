@@ -104,6 +104,8 @@ fn create_model() raises:
     print("number of parameters", len(model.parameters()))
 
     var sklearn = Python.import_module("sklearn.datasets")
+    var np = Python.import_module("numpy")
+    var plt = Python.import_module("matplotlib.pyplot")
 
     # Generate the dataset
     var make_moons = sklearn.make_moons
@@ -146,10 +148,62 @@ fn create_model() raises:
 
         except e:
             print(e)
+
+    var h: Float64 = 0.25
+    var x_min: Float64 = np.min(X.T[0]).to_float64() - 1
+    var x_max: Float64 = np.max(X.T[0]).to_float64() + 1
+    var y_min: Float64 = np.min(X.T[1]).to_float64() - 1
+    var y_max: Float64 = np.max(X.T[1]).to_float64() + 1
+    #var x_min: Float64 = Float64(np.min(X.T[0]).to_float64()) - 1
+    #var x_max: Float64 = Float64(np.max(X.T[0]).to_float64()) + 1
+    #var y_min: Float64 = Float64(np.min(X.T[1]).to_float64()) - 1
+    #var y_max: Float64 = Float64(np.max(X.T[1]).to_float64()) + 1
+    print("pasa int object has no attribute int64")
+
+    var xx: PythonObject = np.arange(x_min, x_max, h)
+    var yy: PythonObject = np.arange(y_min, y_max, h)
+    var xx_yy: PythonObject = np.meshgrid(xx, yy)
+    var Xmesh: PythonObject = np.c_[xx_yy[0].ravel(), xx_yy[1].ravel()]
+
+    var inputs = List[List[ArcPointer[Value]]]()
+    #for i in range(Xmesh.shape[0].to_int64()):
+    for i in range(Int(Xmesh.shape[0])):
+        print("pasa segundo int object has no attribute int64")
+        var row = List[ArcPointer[Value]]()
+        #for j in range(Xmesh.shape[1].to_int64()):
+        for j in range(Int(Xmesh.shape[1])):
+            var value = Float64(Xmesh[i, j].to_float64())
+            row.append(ArcPointer[Value](Value(value)))
+        inputs.append(row)
+
+    var scores = List[ArcPointer[Value]]()
+    for input in inputs:
+        scores.append(model(x = input[])[0])
+
+    var Z = List[Bool]()
+    for score in scores:
+        Z.append(score[][].data[] > 0)
+
+    var Z_np = np.zeros(len(Z), dtype=np.bool_)
+    for i in range(len(Z)):
+        Z_np[i] = Z[i]
+
+    #var Z_np: PythonObject = np.array(Z)
+    var Z_reshaped: PythonObject = Z_np.reshape(xx_yy[0].shape)
+
+    plt.figure()
+    plt.contourf(xx_yy[0], xx_yy[1], Z_reshaped, cmap=plt.cm.Spectral, alpha=0.8)
+    plt.scatter(X.T[0], X.T[1], c=y, s=40, cmap=plt.cm.Spectral)
+    plt.xlim(np.min(xx), np.max(xx))
+    plt.ylim(np.min(yy), np.max(yy))
+    plt.show()
+    
     make_moons = PythonObject(None)
     X = PythonObject(None)
     y = PythonObject(None)
     sklearn = PythonObject(None)
+    np = PythonObject(None)
+    plt = PythonObject(None)
 
 
 
