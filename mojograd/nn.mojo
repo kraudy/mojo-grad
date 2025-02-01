@@ -15,6 +15,7 @@ struct Module:
 
 struct Neuron:
     """A Neuron receives a list of inputs and outpus a Value."""
+    #TODO: Maybe this needs to be a pointer
     var w : List[ArcPointer[Value]]
     var b : ArcPointer[Value]
     var nonlin : ArcPointer[Bool]
@@ -80,6 +81,7 @@ struct Layer:
     """A Layer receives a list of inputs and applies them to all the Neurons where each
     one returns a Value. The Layer itself returns a list of Value.
     Note to self: A Layer has no weigths, the Neuron itself has the weights."""
+    #TODO: Maybe this needs to be a pointer
     var neurons : List[ArcPointer[Neuron]]
 
     fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
@@ -123,6 +125,7 @@ struct Layer:
         return neurons_repr
 
 struct MLP:
+    #TODO: Maybe this needs to be pointer
     var layers : List[ArcPointer[Layer]]
     fn __init__(out self, nin: Int, nouts: List[Int]):
         var sz = List[Int](nin) + nouts

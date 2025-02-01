@@ -12,6 +12,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     var np = Python.import_module("numpy")
 
+    #TODO: Validate this logic
     if batch_size is None:
         Xb = X
         yb = y
@@ -28,17 +29,17 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
     #for i in range(Int(100)):
-        print("Outer For")
-        print(i)
+        #print("Outer For")
+        #print(i)
         var row = List[ArcPointer[Value]]()
         var row_list = List[Float64]()
         for j in range(Int(Xb.shape[1])):
-            print("Inner For")
-            print(j)
+            #print("Inner For")
+            #print(j)
             #TODO: Find a better way to do this conversion
             var value: Float64 = Xb.item(i, j).to_float64()
             row_list.append(value)
-            print(value)
+            #print(value)
 
             row.append(ArcPointer[Value](Value(value)))
 
@@ -51,11 +52,11 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     var scores = List[List[ArcPointer[Value]]]()
     print("Scores ===============")
     for input in inputs:
-        for i in input[]:
-            print(repr(i[][]))
+        #for i in input[]:
+        #    print(repr(i[][]))
         scores.append(model[](x = input[]))
         """Here, each list of scores becomes a 1 element list."""
-        # Maybe scores can be converted to List[ArcPointer[Value]] here
+        #TODO: Maybe scores can be converted to List[ArcPointer[Value]] after here
 
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
@@ -64,9 +65,10 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
         var yi: Float64 = yb.item(i).to_float64()
         #var yi = Float64(yb[i])
         var scorei = scores[i]
-        print(len(scorei))
+        #print(len(scorei))
         # len(scorei) = 1
-        print(repr(scorei[0][]))
+        #print(repr(scorei[0][]))
+
         # Note how the output of each list after the forward in scores is only one value
         losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei[0][])).relu()))
     
@@ -76,7 +78,8 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     var data_loss = ArcPointer[Value](Value(0))
     for loss in losses:
         data_loss[] += loss[][]
-    data_loss[] = Value(1.0 / Float64(len(losses)))
+    #data_loss[] = Value(1.0 / Float64(len(losses)))
+    data_loss[] *= Value(1.0 / Float64(len(losses)))
 
     print("Sum of the data loss")
     print(repr(data_loss[]))
@@ -97,7 +100,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
         var yi = Float64(yb.item(i).to_float64())
         var scorei = scores[i]
         # len(scorei) = 1
-        print(repr(scorei[0][]))
+        #print(repr(scorei[0][]))
         if (yi > 0) == (scorei[0][].data[] > 0):
             accuracy_count += 1
 
@@ -128,28 +131,36 @@ fn create_model() raises:
 
     # Adjust y to be -1 or 1
     y = y * 2 - 1
+
+    var model_ptr = ArcPointer[MLP](model)
   
-    for k in range(100):
+    #for k in range(100):
+    for k in range(10):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64
             # forward
-            (total_loss, acc) = loss(ArcPointer[MLP](model), X, y, PythonObject(None))
+            (total_loss, acc) = loss(model_ptr, X, y, PythonObject(None))
 
             # backward
             #TODO: Implement this with trait 
             for out in model.parameters():
                 out[][].grad[] = 0
+                """The use of the grad is to update the data so that the next 
+                forward pass gives better results. Which makes the model 'learn'."""
+
             total_loss[].backward()
 
             # update (sgd)
             var learning_rate : Float64 = 1.0 - 0.9 * k/100 
             for p in model.parameters():
+                print(repr(p[][]))
                 p[][].data[] -= learning_rate * p[][].grad[]
+                print(repr(p[][]))
                 """Note how the grad is used to update the same Value data"""
             
-            if k % 1 == 0:
-                print("Step: ", k, " | loss: ", total_loss[].data[], " | accuracy: ", acc*100)
+            #if k % 1 == 0:
+            print("Step: ", k, " | loss data: ", total_loss[].data[], " | loss grad: ", total_loss[].grad[] , " | accuracy: ", acc*100)
 
         except e:
             print(e)
