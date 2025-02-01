@@ -97,6 +97,51 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     return (total_loss, accuracy)
 
+fn show_predictions(model: ArcPointer[MLP], X: PythonObject, y: PythonObject) raises:
+    var np = Python.import_module("numpy")
+    var plt = Python.import_module("matplotlib.pyplot")
+
+    var h: Float64 = 0.25
+    var x_min: Float64 = np.min(X.T[0]).to_float64() - 1
+    var x_max: Float64 = np.max(X.T[0]).to_float64() + 1
+    var y_min: Float64 = np.min(X.T[1]).to_float64() - 1
+    var y_max: Float64 = np.max(X.T[1]).to_float64() + 1
+
+    var xx: PythonObject = np.arange(x_min, x_max, h)
+    var yy: PythonObject = np.arange(y_min, y_max, h)
+    var xx_yy: PythonObject = np.meshgrid(xx, yy)
+    var Xmesh: PythonObject = np.c_[xx_yy[0].ravel(), xx_yy[1].ravel()]
+
+    var inputs = List[List[ArcPointer[Value]]]()
+    for i in range(Int(Xmesh.shape[0])):
+        var row = List[ArcPointer[Value]]()
+        for j in range(Int(Xmesh.shape[1])):
+            var value = Float64(Xmesh[i, j].to_float64())
+            row.append(ArcPointer[Value](Value(value)))
+        inputs.append(row)
+
+    var scores = List[ArcPointer[Value]]()
+    for input in inputs:
+        scores.append(model[](x = input[])[0])
+
+    var Z = List[Bool]()
+    for score in scores:
+        Z.append(score[][].data[] > 0)
+
+    var Z_np = np.zeros(len(Z), dtype=np.bool_)
+    for i in range(len(Z)):
+        Z_np[i] = Z[i]
+
+    #var Z_np: PythonObject = np.array(Z)
+    var Z_reshaped: PythonObject = Z_np.reshape(xx_yy[0].shape)
+
+    plt.figure()
+    plt.contourf(xx_yy[0], xx_yy[1], Z_reshaped, cmap=plt.cm.Spectral, alpha=0.8)
+    plt.scatter(X.T[0], X.T[1], c=y, s=40, cmap=plt.cm.Spectral)
+    plt.xlim(np.min(xx), np.max(xx))
+    plt.ylim(np.min(yy), np.max(yy))
+    plt.show()
+
 fn create_model() raises:
     # initialize a model 
     model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network
@@ -119,7 +164,7 @@ fn create_model() raises:
     #var model_ptr = ArcPointer[MLP](model)
   
     #for k in range(100):
-    for k in range(10):
+    for k in range(2):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64
@@ -130,7 +175,7 @@ fn create_model() raises:
             #TODO: Implement this with trait 
             for out in model.parameters():
                 out[][].grad[] = 0
-                """The use of the grad is to update the data so that the next 
+                """The use of the grad is to update the Neuron data so that the next 
                 forward pass gives better results. Which makes the model 'learn'."""
 
             total_loss[].backward()
@@ -141,7 +186,8 @@ fn create_model() raises:
                 print(repr(p[][]))
                 p[][].data[] -= learning_rate * p[][].grad[]
                 print(repr(p[][]))
-                """Note how the grad is used to update the same Value data"""
+                """Note how the grad is used to update the same Value data and the 
+                learning_rate damps the influence as the iterations increases"""
             
             #if k % 1 == 0:
             print("Step: ", k, " | loss data: ", total_loss[].data[], " | loss grad: ", total_loss[].grad[] , " | accuracy: ", acc*100)
@@ -149,54 +195,7 @@ fn create_model() raises:
         except e:
             print(e)
 
-    var h: Float64 = 0.25
-    var x_min: Float64 = np.min(X.T[0]).to_float64() - 1
-    var x_max: Float64 = np.max(X.T[0]).to_float64() + 1
-    var y_min: Float64 = np.min(X.T[1]).to_float64() - 1
-    var y_max: Float64 = np.max(X.T[1]).to_float64() + 1
-    #var x_min: Float64 = Float64(np.min(X.T[0]).to_float64()) - 1
-    #var x_max: Float64 = Float64(np.max(X.T[0]).to_float64()) + 1
-    #var y_min: Float64 = Float64(np.min(X.T[1]).to_float64()) - 1
-    #var y_max: Float64 = Float64(np.max(X.T[1]).to_float64()) + 1
-    print("pasa int object has no attribute int64")
-
-    var xx: PythonObject = np.arange(x_min, x_max, h)
-    var yy: PythonObject = np.arange(y_min, y_max, h)
-    var xx_yy: PythonObject = np.meshgrid(xx, yy)
-    var Xmesh: PythonObject = np.c_[xx_yy[0].ravel(), xx_yy[1].ravel()]
-
-    var inputs = List[List[ArcPointer[Value]]]()
-    #for i in range(Xmesh.shape[0].to_int64()):
-    for i in range(Int(Xmesh.shape[0])):
-        print("pasa segundo int object has no attribute int64")
-        var row = List[ArcPointer[Value]]()
-        #for j in range(Xmesh.shape[1].to_int64()):
-        for j in range(Int(Xmesh.shape[1])):
-            var value = Float64(Xmesh[i, j].to_float64())
-            row.append(ArcPointer[Value](Value(value)))
-        inputs.append(row)
-
-    var scores = List[ArcPointer[Value]]()
-    for input in inputs:
-        scores.append(model(x = input[])[0])
-
-    var Z = List[Bool]()
-    for score in scores:
-        Z.append(score[][].data[] > 0)
-
-    var Z_np = np.zeros(len(Z), dtype=np.bool_)
-    for i in range(len(Z)):
-        Z_np[i] = Z[i]
-
-    #var Z_np: PythonObject = np.array(Z)
-    var Z_reshaped: PythonObject = Z_np.reshape(xx_yy[0].shape)
-
-    plt.figure()
-    plt.contourf(xx_yy[0], xx_yy[1], Z_reshaped, cmap=plt.cm.Spectral, alpha=0.8)
-    plt.scatter(X.T[0], X.T[1], c=y, s=40, cmap=plt.cm.Spectral)
-    plt.xlim(np.min(xx), np.max(xx))
-    plt.ylim(np.min(yy), np.max(yy))
-    plt.show()
+    show_predictions(model, X, y)
     
     make_moons = PythonObject(None)
     X = PythonObject(None)

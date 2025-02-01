@@ -20,6 +20,8 @@ struct Value():
 
     var _op : String
 
+    #TODO: Validate if this ArcPointer[Float64] is needed or just Float64 since data is already ArcPointer
+    #TODO: Consider changin inout to out
     fn __init__(inout self, data: ArcPointer[Float64]):
         
         self.data = data
@@ -147,6 +149,7 @@ struct Value():
     
     fn __rmul__(self, other: Float64) -> Value:
         # When adding the order is indifferent
+        #TODO: Change to self * other
         return self.__mul__(other)
 
     fn __imul__ (inout self, other: Value):
@@ -158,7 +161,6 @@ struct Value():
         self = out
     
     fn __eq__(self, other: Self) -> Bool:
-        #return UnsafePointer[Value].address_of(self) == UnsafePointer[Value].address_of(other)
         return self.data.__is__(other.data) 
 
     fn backward_pow(mut self):
@@ -190,31 +192,32 @@ struct Value():
     #TODO: Check if ArcPointer[List[ArcPointer[Value]]] is needed or just List[ArcPointer[Value]] 
     fn build_topo(self_ptr: ArcPointer[Value], mut visited: ArcPointer[List[ArcPointer[Value]]], mut topo: ArcPointer[List[ArcPointer[Value]]]):
 
-        print("Build topo")
+        #print("Build topo")
 
         #if UnsafePointer[Value].address_of(self_ptr) in visited:
         #    return
         #if ArcPointer[Value].address_of(self_ptr[]) in visited:
+        #TODO: This should be optimized
         for vis in visited[]:
             #if self_ptr.__is__(vis[][]):
             if self_ptr[] == vis[][]:
                 return
             
-        print("Entering not visited")
+        #print("Entering not visited")
         #visited.append(UnsafePointer.address_of(self_ptr))
         visited[].append(self_ptr)
-        print(len(visited[]))
+        #print(len(visited[]))
         if len(self_ptr[]._prev) > 0:
-            print("Entered _prev1 != UnsafePointer[Value]()")
+            #print("Entered _prev1 != UnsafePointer[Value]()")
             Value.build_topo(self_ptr[]._prev[0], visited, topo)
 
         if len(self_ptr[]._prev) == 2:
-            print("Entered _prev2 != UnsafePointer[Value]()")
+            #print("Entered _prev2 != UnsafePointer[Value]()")
             Value.build_topo(self_ptr[]._prev[1], visited, topo)
         
         #topo.append(UnsafePointer[Value].address_of(self_ptr))
         topo[].append(self_ptr)
-        print(len(topo[]))
+        #print(len(topo[]))
 
     fn backward(mut self):
         #TODO: Check: visited = List[ArcPointer[Value]]()
@@ -238,33 +241,31 @@ struct Value():
         print("================")
 
         for v_ptr in reversed(topo[]):
-            print("for reversed")
+            #print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             var v = v_ptr[][]
-            print(repr(v))
+            #print(repr(v))
+            #TODO: Maybe add v._op == " " at first to skip leaf nodes
             if v._op == "+":
-                print(repr(v._prev[0][]))
-                print(repr(v._prev[1][]))
+                #print(repr(v._prev[0][]))
+                #print(repr(v._prev[1][]))
                 v.backward_add()
-                print(repr(v._prev[0][]))
-                print(repr(v._prev[1][]))
+                #print(repr(v._prev[0][]))
+                #print(repr(v._prev[1][]))
             elif v._op == "*":
-                print(repr(v._prev[0][]))
-                print(repr(v._prev[1][]))
+                #print(repr(v._prev[0][]))
+                #print(repr(v._prev[1][]))
                 v.backward_mul()
-                print(repr(v._prev[0][]))
-                print(repr(v._prev[1][]))
+                #print(repr(v._prev[0][]))
+                #print(repr(v._prev[1][]))
             elif v._op == "**":
-                print(repr(v._prev[0][]))
+                #print(repr(v._prev[0][]))
                 v.backward_pow()
-                print(repr(v._prev[0][]))
+                #print(repr(v._prev[0][]))
             elif v._op == "ReLu":
-                print(repr(v._prev[0][]))
+                #print(repr(v._prev[0][]))
                 v.backward_relu()
-                print(repr(v._prev[0][]))
-
-    fn __print(self):
-        print("data: ", self.data[], "grad: ", self.grad[], "Op: ", self._op)
+                #print(repr(v._prev[0][]))
     
     fn __repr__(self) -> String:
         return "data: " + str(self.data[]) + " | grad: " + str(self.grad[]) + " | Op: " + self._op

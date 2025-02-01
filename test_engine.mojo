@@ -86,5 +86,6 @@ fn main():
         test1()
         test2()
         test3()
+        print("All good")
     except e:
         print(e)
