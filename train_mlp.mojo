@@ -64,6 +64,18 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[ArcPointer[Value]]]:
         inputs.append(row)
     return inputs
 
+fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]]]) raises -> List[ArcPointer[Value]]:
+    """Make the forward pass."""
+    var scores = List[ArcPointer[Value]]()
+    print("Scores ===============")
+    for input in inputs:
+        # Added [0] to the end to get the only Value of the list after the activation
+        scores.append(model[](x = input[])[0])
+        """Here, each list of scores becomes a 1 element list."""
+    
+    return scores
+    
+
 fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[ArcPointer[Value], Float64]:
     var Xb : PythonObject
     var yb : PythonObject
@@ -82,30 +94,14 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
         Xb = np.take(X, indices, axis=0)
         yb = np.take(y, indices, axis=0)
     
-    #var inputs = List[List[ArcPointer[Value]]]()
     var inputs = make_inputs(Xb)
     """These are the inputs to the model layers"""
-
-    #print("Inputs ===============")
-    #for i in range(Int(Xb.shape[0])):
-    #    var row = List[ArcPointer[Value]]()
-    #    for j in range(Int(Xb.shape[1])):
-    #        #TODO: Find a better way to do this conversion
-    #        var value: Float64 = Xb.item(i, j).to_float64()
-    #        row.append(ArcPointer[Value](Value(value)))
-
-    #    inputs.append(row)
     
     print("Passed =========================")
     print("len input: ", len(inputs))
 
     # This is the forward
-    var scores = List[ArcPointer[Value]]()
-    print("Scores ===============")
-    for input in inputs:
-        # Added [0] to the end to get the only Value of the list after the activation
-        scores.append(model[](x = input[])[0])
-        """Here, each list of scores becomes a 1 element list."""
+    var scores = make_forward(model, inputs)
 
     #svm "max-margin" loss
     var losses = List[ArcPointer[Value]]()
@@ -180,7 +176,7 @@ fn create_mlp_model() raises:
     y = y * 2 - 1
   
     #for k in range(100):
-    for k in range(2):
+    for k in range(10):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64
@@ -199,7 +195,7 @@ fn create_mlp_model() raises:
             total_loss[].backward()
 
             # update (sgd)
-            var learning_rate : Float64 = 1.0 - 0.9 * k/10#100 
+            var learning_rate : Float64 = 1.0 - 0.9 * k/100 
             for p in model.parameters():
                 print(repr(p[][]))
                 p[][].data[] -= learning_rate * p[][].grad[]
