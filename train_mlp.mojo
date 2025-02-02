@@ -113,7 +113,6 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
         var scorei = scores[i]
         # Note how the output of each list after the forward in scores is only one value
         #TODO: Consider using log
-        #losses.append(ArcPointer[Value]((Value(1) + (Value(-1) * Value(yi) * scorei[])).relu()))
         losses.append((1 + (-Value(yi) * scorei[])).relu())
     
     print("After calculating losses")
