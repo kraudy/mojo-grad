@@ -42,13 +42,13 @@ struct Neuron:
         var act = Value(data = self.b[].data[])
 
         #TODO: Check vector operation
-        print("Neuron class =========")
-        print("len w : " + str(len(self.w)))
+        #print("Neuron class =========")
+        #print("len w : " + str(len(self.w)))
         # W should have the same length as X
         for i in range(len(self.w)):
             """On each layer activation, the neuron takes the layer's input, multiplies it
             by it's weigth and sum it."""
-            print(str(act.data[]))
+            #print(str(act.data[]))
             #act.data[] += (self.w[i][].data[] * x[i][].data[])
             act += (self.w[i][] * x[i][]) # weigth inputs and linear combination
             """This sum represent all input's collective influence on the neuron."""
@@ -72,7 +72,10 @@ struct Neuron:
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         #TODO: Check this operation
-        return self.w + self.b
+        #return self.w + self.b
+        var params = self.w
+        params.append(self.b)
+        return params
       
     fn __repr__(self) -> String:
         var neuron_type = String("ReLU" if self.nonlin[] else "Linear")

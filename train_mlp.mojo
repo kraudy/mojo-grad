@@ -162,7 +162,7 @@ fn create_mlp_model() raises:
     y = y * 2 - 1
   
     #for k in range(100):
-    for k in range(2):
+    for k in range(10):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64

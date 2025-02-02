@@ -244,28 +244,28 @@ struct Value():
             #print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             var v = v_ptr[][]
-            #print(repr(v))
+            print(repr(v))
             #TODO: Maybe add v._op == " " at first to skip leaf nodes
             if v._op == "+":
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
                 v.backward_add()
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
             elif v._op == "*":
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
                 v.backward_mul()
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
+                print(repr(v._prev[0][]))
+                print(repr(v._prev[1][]))
             elif v._op == "**":
-                #print(repr(v._prev[0][]))
+                print(repr(v._prev[0][]))
                 v.backward_pow()
-                #print(repr(v._prev[0][]))
+                print(repr(v._prev[0][]))
             elif v._op == "ReLu":
-                #print(repr(v._prev[0][]))
+                print(repr(v._prev[0][]))
                 v.backward_relu()
-                #print(repr(v._prev[0][]))
+                print(repr(v._prev[0][]))
     
     fn __repr__(self) -> String:
         return "data: " + str(self.data[]) + " | grad: " + str(self.grad[]) + " | Op: " + self._op
