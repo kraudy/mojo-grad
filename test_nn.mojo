@@ -1,17 +1,22 @@
 from mojograd.engine import Value 
 from mojograd.nn import Neuron, MLP, Layer
 from memory import ArcPointer
+from random import random_float64
 
 from testing import assert_almost_equal, assert_true, assert_equal
 from python import Python, PythonObject
 
 fn main(): 
     fn test1() raises:
-        """ Testing nn """
-        var n = Neuron(2)
+        """ Creates a Neuron with 10 weights that should received array of 10 inputs"""
+        var n = Neuron(10)
         #var x = List[Value](Value(1.0), Value(-2.0))
         #TODO: Check if this Arcpointer is neede
-        var x = List[ArcPointer[Value]](ArcPointer[Value](Value(1.0)), ArcPointer[Value](Value(-2.0)))
+        var x = List[ArcPointer[Value]]()
+        #var x = List[ArcPointer[Value]](ArcPointer[Value](Value(1.0)), ArcPointer[Value](Value(-2.0)))
+        for _ in range(10):
+            var rand = random_float64(-1.0, 1.0)
+            x.append(ArcPointer[Value](Value(rand)))
         var y = n(x)
         y.backward()
         print("Neuron test")
@@ -21,6 +26,51 @@ fn main():
         print(repr(n))
         for a in n.parameters():
             print(repr(a[][]))
+
+    fn test2() raises:
+        var layers = List[List[Neuron]]()
+        for i in range(4):
+            var nlist = List[Neuron]()
+            for j in range(2 ** i):
+                print(j)
+                nlist.append(Neuron(nin = (2 ** (i + 1))))
+                # The first layer should receive 16 inputs
+            print(i)
+            layers.append(nlist)
+        
+        print("Validating created layers")
+        print(len(layers))
+        for n in layers:
+            print(len(n[]))
+        
+        # Puting the layers from first to last
+        var rev_layers = reversed(layers)
+        # Generating the input
+        var x = List[ArcPointer[Value]]()
+        for _ in range(2 ** 4):
+            var rand = random_float64(-1.0, 1.0)
+            x.append(Value(rand))
+        
+        # Manually doing the forward
+        #var val = List[Value]()
+        for l in rev_layers:
+            var layer_out = List[ArcPointer[Value]]()
+            for n in l[]:
+                layer_out.append(n[](x))
+            x = layer_out
+        
+        # x should have the last output and be 1 value
+        print("afeter forward")
+        print(len(x))
+        print(repr(x[0][]))
+        x[0][].backward()
+        print("afeter backward")
+        print(repr(x[0][]))
+
+        print("Neuron repr")
+        for l in rev_layers:
+            for n in l[]:
+                print(repr(n[].__repr__(True)))
     
     fn showmoons() raises:
         var sklearn = Python.import_module("sklearn.datasets")
@@ -103,11 +153,12 @@ fn main():
     
 
     try:
-        test1()
+        #test1()
+        test2()
         #showmoons()
-        test_neuron()
-        test_layer()
-        test_mlp()
+        #test_neuron()
+        #test_layer()
+        #test_mlp()
     except e:
         print(e)
 

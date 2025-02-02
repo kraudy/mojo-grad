@@ -14,12 +14,16 @@ struct Module:
 
 
 struct Neuron:
-    """A Neuron receives a list of inputs and outpus a Value."""
+    """The input a Neuron receives comes from the layer's activation. The input list
+    gets progagated through the layer's Neurons and each one outputs a Value. So, the 
+    output of a layer is a list of the neurons outpus."""
     #TODO: Maybe this needs to be a pointer
     var w : List[ArcPointer[Value]]
+    """The weigths are used to assign importance to the inputs. That is why they are between 0 and 1 and
+    that is also why they are called weights, because they 'weight' the inputs."""
     var b : ArcPointer[Value]
     var nonlin : ArcPointer[Bool]
-    """This is the function that makes the model 'learn'."""
+    """W and b form the function that makes the model 'learn'."""
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[ArcPointer[Value]]()
@@ -42,16 +46,26 @@ struct Neuron:
         print("len w : " + str(len(self.w)))
         # W should have the same length as X
         for i in range(len(self.w)):
+            """On each layer activation, the neuron takes the layer's input, multiplies it
+            by it's weigth and sum it."""
             print(str(act.data[]))
             #act.data[] += (self.w[i][].data[] * x[i][].data[])
-            act += (self.w[i][] * x[i][])
+            act += (self.w[i][] * x[i][]) # weigth inputs and linear combination
+            """This sum represent all input's collective influence on the neuron."""
 
         if self.nonlin[]:
+            """Activation function. Used to learn more complex patterns by including non-linearity"""
             return act.relu()
         else:
             return act
     
     fn __moveinit__(out self, owned other: Neuron):
+        self.w = other.w
+        self.b = other.b
+        self.nonlin = other.nonlin
+    
+    #TODO: Validate if this works fine or only the data should be coppied
+    fn __copyinit__(out self, other: Neuron):
         self.w = other.w
         self.b = other.b
         self.nonlin = other.nonlin
@@ -83,8 +97,10 @@ struct Layer:
     Note to self: A Layer has no weigths, the Neuron itself has the weights."""
     #TODO: Maybe this needs to be a pointer
     var neurons : List[ArcPointer[Neuron]]
+    """A layer is mostly an abstraction to interact with many neurons in a uniform manner."""
 
     fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
+        """These Layers are assumed to be fully connected"""
         # nin:  How many values will this layer receive
         # nout: How many values will this layer output
         # kwargs: If relu is applied to the output of every neuron

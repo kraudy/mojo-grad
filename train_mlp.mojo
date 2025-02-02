@@ -16,6 +16,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
         Xb = X
         yb = y
     else:
+        print("no es none")
         var total_samples = Float64(X.shape[0])
         var batch_size_int = batch_size.to_int64()
         var indices = np.random.choice(total_samples, batch_size_int, replace=False)
@@ -161,12 +162,14 @@ fn create_mlp_model() raises:
     y = y * 2 - 1
   
     #for k in range(100):
-    for k in range(10):
+    for k in range(2):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64
             # forward
+            #TODO: Consider adding a batch_size of 30 to better learning
             (total_loss, acc) = loss(model, X, y, PythonObject(None))
+            #(total_loss, acc) = loss(model, X, y, PythonObject(100))
 
             # backward
             #TODO: Implement this with trait 
