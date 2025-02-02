@@ -147,7 +147,11 @@ struct MLP:
     #TODO: Maybe this needs to be pointer
     var layers : List[ArcPointer[Layer]]
     fn __init__(out self, nin: Int, nouts: List[Int]):
-        var sz = List[Int](nin) + nouts
+        #var sz = List[Int](nin) + nouts
+        var sz = List[Int]()
+        sz.append(nin)
+        for n in nouts:
+            sz.append(n[])
         self.layers = List[ArcPointer[Layer]]()
 
         for i in range(len(nouts)):
