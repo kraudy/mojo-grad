@@ -19,6 +19,7 @@ fn my_shuffle(mut arr: Tensor[DType.int64]):
         arr[Index(i)] = arr[Index(j)]    # Direct assignment for setting values
         arr[Index(j)] = temp
 
+#TODO: Fix for n = 3 nan error
 fn linspace(start: Float64, stop: Float64, num: Int) -> Tensor[DType.float64]:
     var result = Tensor[DType.float64](num)
     var step = (stop - start) / Float64(num - 1)
@@ -49,7 +50,9 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
     seed(random_seed)
 
     var n_samples_out = n_samples // 2
+    print(n_samples_out)
     var n_samples_in = n_samples - n_samples_out
+    print(n_samples_in)
 
     var outer_circ_x = apply_cos(linspace(0, pi, n_samples_out))
     var outer_circ_y = apply_sin(linspace(0, pi, n_samples_out))
