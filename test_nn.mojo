@@ -154,8 +154,8 @@ fn main():
 
     try:
         #test1()
-        test2()
-        #showmoons()
+        #test2()
+        showmoons()
         #test_neuron()
         #test_layer()
         #test_mlp()

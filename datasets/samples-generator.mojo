@@ -7,7 +7,7 @@ from math import cos, sin, pi
 from random import random_float64, seed, random_si64
 from utils.index import Index
 
-
+from python import Python, PythonObject
 
 #inout can be used with initialized or uninitialized values, out with uninitialized ones
 fn my_shuffle(mut arr: Tensor[DType.int64]):
@@ -45,10 +45,6 @@ fn apply_sin(t: Tensor[DType.float64]) -> Tensor[DType.float64]:
     for i in range(t.dim(0)):
         result[i] = sin(t[i])
     return result
-
-
-#fn make_moons(n_samples: Int = 100, shuffle:Bool = True, noise:Float64 = 0.0, random_state:Int = 0):
-#    pass
 
 fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 0.0, random_seed: Int = 0) -> Tuple[Tensor[DType.float64], Tensor[DType.float64]]:
     seed(random_seed)
@@ -103,11 +99,31 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
 
     return (X, y)
 
-fn main():
+fn main() raises:
     var X : Tensor[DType.float64] 
     var y : Tensor[DType.float64] 
-    (X, y) = make_moons(100, True, 0.1, 42)
+    (X, y) = make_moons(100, True, 0.25, 42)
     print("X shape:", X.shape())
     print("y shape:", y.shape())
     for i in range(5):
         print("Sample", i, "- X:", X[i, 0], X[i, 1], "y:", y[i])
+
+    var plt = Python.import_module("matplotlib.pyplot")
+    var np = Python.import_module("numpy")
+
+    # Convert Mojo tensors to NumPy arrays
+    var X_np = np.zeros((X.dim(0), X.dim(1)))
+    var y_np = np.zeros(y.dim(0))
+
+    for i in range(X.dim(0)):
+        for j in range(X.dim(1)):
+            X_np[i, j] = X[i, j]
+        y_np[i] = y[i]
+
+    # Adjust y to be -1 or 1
+    y_np = y_np * 2 - 1
+
+    # Create the plot
+    plt.figure(figsize=(5,5))
+    plt.scatter(X_np.T[0], X_np.T[1], c=y_np, s=20, cmap='jet')
+    plt.show()
