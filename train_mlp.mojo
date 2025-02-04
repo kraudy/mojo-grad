@@ -74,6 +74,19 @@ fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]
         """Here, each list of scores becomes a 1 element list."""
     
     return scores
+
+fn calculate_losses(scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> List[ArcPointer[Value]]:
+    var losses = List[ArcPointer[Value]]()
+    print("Losses ===============")
+    for i in range(len(scores)):
+        """This is the loss calculation"""
+        #TODO: Find a better way to do this conversion
+        var yi: Float64 = yb.item(i).to_float64()
+        var scorei = scores[i]
+        #TODO: Consider using log for classification
+        losses.append((1 + (-Value(yi) * scorei[])).relu())
+    
+    return losses
     
 
 fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[ArcPointer[Value], Float64]:
@@ -82,6 +95,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     var np = Python.import_module("numpy")
 
+    #TODO: Move this to its own function
     #TODO: Validate this logic
     if batch_size is None:
         Xb = X
@@ -104,16 +118,8 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     var scores = make_forward(model, inputs)
 
     #svm "max-margin" loss
-    var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
-    for i in range(len(scores)):
-        """This is the loss calculation"""
-        #TODO: Find a better way to do this conversion
-        var yi: Float64 = yb.item(i).to_float64()
-        var scorei = scores[i]
-        # Note how the output of each list after the forward in scores is only one value
-        #TODO: Consider using log
-        losses.append((1 + (-Value(yi) * scorei[])).relu())
+    var losses = calculate_losses(scores, yb)
     
     print("After calculating losses")
     print(len(losses))
