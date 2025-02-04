@@ -95,34 +95,51 @@ struct Neuron:
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
 struct Layer:
-    """A Layer receives a list of inputs and applies them to all the Neurons where each
-    one returns a Value. The Layer itself returns a list of Value.
-    Note to self: A Layer has no weigths, the Neuron itself has the weights."""
+    """
+    A fully connected Layer.
+    
+    Input
+    ----------
+    A list of Values.
+
+    Returns
+    ----------
+    A list of weigthed Values.
+    Note to self: A Layer has no weigths since is mostly an abstraction to interact with 
+    many neurons in a uniform manner, the neuron itself has the weights.
+
+    Parameters
+    ----------
+    nin:  
+      Number of weigths per neuron or how many values will this layer receive.
+    nout: 
+      Number of neurons per layer or how many values will this layer output.
+    kwargs: 
+      If relu is applied to the output of every neuron.
+
+    Activation
+    ----------
+    The input data is weigthed through all the layer's neurons.
+
+    Examples
+    ----------    
+
+    """
     #TODO: Maybe this needs to be a pointer
     var neurons : List[ArcPointer[Neuron]]
-    """A layer is mostly an abstraction to interact with many neurons in a uniform manner."""
+    """The layer's neurons."""
 
     fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
-        """These Layers are assumed to be fully connected"""
-        # nin:  How many values will this layer receive
-        # nout: How many values will this layer output
-        # kwargs: If relu is applied to the output of every neuron
-
         self.neurons = List[ArcPointer[Neuron]]()
         for _ in range(nout):
             self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
     
     fn __call__(self, x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
-        """When the layer is called, it activates all the layer's Neurons with the 
-        input data."""
         var out = List[ArcPointer[Value]]()
         for i in range(len(self.neurons)):
             out.append(self.neurons[i][](x = x))
         
         return out
-        """We pass Values between layer, not Neurons. The Neuron is needed to 
-        transform the input into the output in the forward pass and update grads
-        in the backprop."""
     
     fn parameters(self) -> List[ArcPointer[Value]]:
         var out = List[ArcPointer[Value]]()
@@ -149,6 +166,9 @@ struct MLP:
     #TODO: Maybe this needs to be pointer
     var layers : List[ArcPointer[Layer]]
     fn __init__(out self, nin: Int, nouts: List[Int]):
+        """Nin: Input data to the model's first Layer, X
+        nouts: Out of each layers, equal to the number of neurons.
+        """
         #var sz = List[Int](nin) + nouts
         var sz = List[Int]()
         sz.append(nin)
@@ -157,7 +177,11 @@ struct MLP:
         self.layers = List[ArcPointer[Layer]]()
 
         for i in range(len(nouts)):
+            # nin = Number of wigths per layer's neuron
+            # nout = Number of neurons per layer
             self.layers.append(Layer(nin = sz[i], nout = sz[i + 1], kwargs = (i != len(nouts) - 1)))
+            """This makes the number of neurons of the current layer equals to the number of weights of eahc neuron
+            of the next layer."""
 
     fn __call__(self, mut x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
         for layer in self.layers:

@@ -169,7 +169,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
 fn create_mlp_model() raises:
     # initialize a model 
-    model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network
+    model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network and 1 layer-output
     print(repr(model))
     print("number of parameters", len(model.parameters()))
 
@@ -187,7 +187,7 @@ fn create_mlp_model() raises:
     y = y * 2 - 1
   
     #for k in range(100):
-    for k in range(2):
+    for k in range(120):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64
