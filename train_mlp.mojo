@@ -75,9 +75,10 @@ fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]
     
     return scores
 
-fn calculate_losses(scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> List[ArcPointer[Value]]:
+fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> ArcPointer[Value]:
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
+    #svm "max-margin" loss
     for i in range(len(scores)):
         """This is the loss calculation"""
         #TODO: Find a better way to do this conversion
@@ -86,8 +87,42 @@ fn calculate_losses(scores: List[ArcPointer[Value]], yb:  PythonObject) raises -
         #TODO: Consider using log for classification
         losses.append((1 + (-Value(yi) * scorei[])).relu())
     
-    return losses
-    
+    print("After calculating losses")
+    print(len(losses))
+
+    var data_loss = ArcPointer[Value](Value(0))
+    for loss in losses:
+        data_loss[] += loss[][]
+    data_loss[] *= Value(1.0 / Float64(len(losses)))
+
+    print("Sum of the data loss")
+    print(repr(data_loss[]))
+
+    var alpha = 1e-4
+    var reg_loss = ArcPointer[Value](Value(0))
+    for p in model[].parameters():
+        reg_loss[] += (p[][] * p[][])
+    reg_loss[] *= Value(alpha)
+    var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
+
+    print("Total loss")
+    print(repr(total_loss[]))
+
+    return total_loss   
+
+fn get_accuracy(scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> Float64:
+    var accuracy_count: Int = 0
+    for i in range(len(scores)):
+        #TODO: Find a better way to do this conversion
+        var yi = Float64(yb.item(i).to_float64())
+        var scorei = scores[i]
+        if (yi > 0) == (scorei[].data[] > 0):
+            accuracy_count += 1
+
+    var accuracy = Float64(accuracy_count) / Float64(len(scores))
+    print("accuracy_count: ", accuracy_count)
+
+    return accuracy   
 
 fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[ArcPointer[Value], Float64]:
     var Xb : PythonObject
@@ -116,44 +151,26 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     # This is the forward
     var scores = make_forward(model, inputs)
+    """These are the 'outputs' of the model"""
 
-    #svm "max-margin" loss
     print("Losses ===============")
-    var losses = calculate_losses(scores, yb)
-    
-    print("After calculating losses")
-    print(len(losses))
+    var total_loss = calculate_losses(model, scores, yb)
 
-    var data_loss = ArcPointer[Value](Value(0))
-    for loss in losses:
-        data_loss[] += loss[][]
-    data_loss[] *= Value(1.0 / Float64(len(losses)))
+    #var accuracy_count: Int = 0
+    #for i in range(len(scores)):
+    #    #TODO: Find a better way to do this conversion
+    #    var yi = Float64(yb.item(i).to_float64())
+    #    var scorei = scores[i]
+    #    if (yi > 0) == (scorei[].data[] > 0):
+    #        accuracy_count += 1
 
-    print("Sum of the data loss")
-    print(repr(data_loss[]))
+    #var accuracy = Float64(accuracy_count) / Float64(len(scores))
+    #print("accuracy_count: ", accuracy_count)
 
-    var alpha = 1e-4
-    var reg_loss = ArcPointer[Value](Value(0))
-    for p in model[].parameters():
-        reg_loss[] += (p[][] * p[][])
-    reg_loss[] *= Value(alpha)
-    var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
+    var accuracy =  get_accuracy(scores, yb)
 
-    print("Total loss")
-    print(repr(total_loss[]))
-
-    var accuracy_count: Int = 0
-    for i in range(len(scores)):
-        #TODO: Find a better way to do this conversion
-        var yi = Float64(yb.item(i).to_float64())
-        var scorei = scores[i]
-        if (yi > 0) == (scorei[].data[] > 0):
-            accuracy_count += 1
-
-    var accuracy = Float64(accuracy_count) / Float64(len(scores))
-    print("accuracy_count: ", accuracy_count)
     print("len scores: ", len(scores))
-    print("accuracy: ", accuracy)
+    print("accuracy: ", str(accuracy))
 
     print("total loss: ", repr(total_loss[]), " | Accuracy: ", str(accuracy))
 
