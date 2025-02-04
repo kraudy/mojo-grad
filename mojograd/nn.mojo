@@ -14,22 +14,42 @@ struct Module:
 
 
 struct Neuron:
-    """The input a Neuron receives comes from the layer's activation. The input list
-    gets progagated through the layer's Neurons and each one outputs a Value. So, the 
-    output of a layer is a list of the neurons outpus."""
+    """
+    A set of weigths and a bias.
+    
+    Input
+    ----------
+    A list of Values.
+
+    Returns
+    ----------
+    A weigthed Value.
+
+    Parameters
+    ----------
+    nin:  
+      Number of weigths of the neuron or how many values expects to receive.
+    nonlin: 
+      If non-linearity is applied to the neuron's activation.
+
+    Activation
+    ----------
+    The input data is weigthed against the neuron's weigths plus bias and then sum up to 
+    get the neuron's influence on the data.
+
+    Examples
+    ----------    
+
+    """
     #TODO: Maybe this needs to be a pointer
     var w : List[ArcPointer[Value]]
-    """The weigths are used to assign importance to the inputs. That is why they are between 0 and 1 and
-    that is also why they are called weights, because they 'weight' the inputs."""
     var b : ArcPointer[Value]
     var nonlin : ArcPointer[Bool]
-    """W and b form the function that makes the model 'learn'."""
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[ArcPointer[Value]]()
         for _ in range(nin):
-            """Note how we are assigning values between -1 and 1.
-            With Relu: 0 (Non probability), 1 (Certain)."""
+            """Values between -1 and 1 for weigthing."""
             var rand = random_float64(-1.0, 1.0)
             self.w.append(ArcPointer[Value](Value(rand)))
 
@@ -39,6 +59,7 @@ struct Neuron:
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
         """This is basically a relation making operation.
         len(x) should be >= len(w). Otherwise makes no sense."""
+        #var act = Value(data = self.b) # Evaluate this
         var act = Value(data = self.b[].data[])
 
         #TODO: Check vector operation
