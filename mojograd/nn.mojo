@@ -137,6 +137,8 @@ struct Layer:
     
     fn __repr__(self) -> String:
         var neurons_repr = String("Layer of [" )
+        neurons_repr += "Input (weigths) " + str(len(self.neurons[0][].w)) + ' | '
+        neurons_repr += ", Output (neurons): " + str(len(self.neurons)) + ' | '
         for i in range(len(self.neurons)):
             neurons_repr += ", " + repr(self.neurons[i][])
         neurons_repr += "]"

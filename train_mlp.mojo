@@ -138,7 +138,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     else:
         print("no es none")
         var total_samples = Float64(X.shape[0])
-        var batch_size_int = batch_size.to_int64()
+        var batch_size_int = batch_size
         var indices = np.random.choice(total_samples, batch_size_int, replace=False)
         Xb = np.take(X, indices, axis=0)
         yb = np.take(y, indices, axis=0)
@@ -155,17 +155,6 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     print("Losses ===============")
     var total_loss = calculate_losses(model, scores, yb)
-
-    #var accuracy_count: Int = 0
-    #for i in range(len(scores)):
-    #    #TODO: Find a better way to do this conversion
-    #    var yi = Float64(yb.item(i).to_float64())
-    #    var scorei = scores[i]
-    #    if (yi > 0) == (scorei[].data[] > 0):
-    #        accuracy_count += 1
-
-    #var accuracy = Float64(accuracy_count) / Float64(len(scores))
-    #print("accuracy_count: ", accuracy_count)
 
     var accuracy =  get_accuracy(scores, yb)
 
@@ -205,7 +194,7 @@ fn create_mlp_model() raises:
             # forward
             #TODO: Consider adding a batch_size of 30 to better learning
             (total_loss, acc) = loss(model, X, y, PythonObject(None))
-            #(total_loss, acc) = loss(model, X, y, PythonObject(100))
+            #(total_loss, acc) = loss(model, X, y, PythonObject(32))
 
             # backward
             #TODO: Implement this with trait 
