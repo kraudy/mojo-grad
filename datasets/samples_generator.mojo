@@ -27,7 +27,6 @@ fn linspace(start: Float64, stop: Float64, num: Int) -> Tensor[DType.float64]:
     return result
 
 fn normal(scale: Float64, size: Tuple[Int, Int]) -> Tensor[DType.float64]:
-    #var result = Tensor[DType.float64](size.get[0](), size.get[1]())
     var result = Tensor[DType.float64](size[0], size[1])
     for i in range(size[0]):
         for j in range(size[1]):
@@ -54,13 +53,11 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
 
     var outer_circ_x = apply_cos(linspace(0, pi, n_samples_out))
     var outer_circ_y = apply_sin(linspace(0, pi, n_samples_out))
-    #var inner_circ_x = Tensor[DType.float64](1.0) - apply_cos(linspace(0, pi, n_samples_in))
     var inner_circ_x = Tensor[DType.float64](1.0 - apply_cos(linspace(0, pi, n_samples_in)))
     var inner_circ_y = Tensor[DType.float64](1.0 - apply_sin(linspace(0, pi, n_samples_in)) - 0.5)#- Tensor[DType.float64](0.5)
 
     var X = Tensor[DType.float64](n_samples, 2)
     for i in range(n_samples_out):
-        #X[i, 0] = outer_circ_x[i]
         X[Index(i, 0)] = outer_circ_x[i]
         X[Index(i, 1)] = outer_circ_y[i]
     for i in range(n_samples_in):
@@ -98,32 +95,3 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
         X = X_with_noise
 
     return (X, y)
-
-fn main() raises:
-    var X : Tensor[DType.float64] 
-    var y : Tensor[DType.float64] 
-    (X, y) = make_moons(100, True, 0.25, 42)
-    print("X shape:", X.shape())
-    print("y shape:", y.shape())
-    for i in range(5):
-        print("Sample", i, "- X:", X[i, 0], X[i, 1], "y:", y[i])
-
-    var plt = Python.import_module("matplotlib.pyplot")
-    var np = Python.import_module("numpy")
-
-    # Convert Mojo tensors to NumPy arrays
-    var X_np = np.zeros((X.dim(0), X.dim(1)))
-    var y_np = np.zeros(y.dim(0))
-
-    for i in range(X.dim(0)):
-        for j in range(X.dim(1)):
-            X_np[i, j] = X[i, j]
-        y_np[i] = y[i]
-
-    # Adjust y to be -1 or 1
-    y_np = y_np * 2 - 1
-
-    # Create the plot
-    plt.figure(figsize=(5,5))
-    plt.scatter(X_np.T[0], X_np.T[1], c=y_np, s=20, cmap='jet')
-    plt.show()
