@@ -50,8 +50,12 @@ fn show_predictions(model: ArcPointer[MLP], X: PythonObject, y: PythonObject) ra
     plt.ylim(np.min(yy), np.max(yy))
     plt.show()
 
+#TODO: Add wich data set to use
+#TODO: Move this to the MLP class, or maybe a DataLoader
 fn make_inputs(Xb: PythonObject) raises -> List[List[ArcPointer[Value]]]:
-    """These are the inputs to the model layers."""
+    """Generate inputs to the model layers.
+    This should take into account the expected input by the model."""
+
     var inputs = List[List[ArcPointer[Value]]]()
     print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
@@ -60,22 +64,22 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[ArcPointer[Value]]]:
             #TODO: Find a better way to do this conversion
             var value: Float64 = Xb.item(i, j).to_float64()
             row.append(ArcPointer[Value](Value(value)))
-
+            """[x0, x1]"""
         inputs.append(row)
     return inputs
 
+#TODO: Move this to the MLP class.
 fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]]]) raises -> List[ArcPointer[Value]]:
-    """Make the forward pass."""
+    """Weigth the input against each layer."""
     var scores = List[ArcPointer[Value]]()
     print("Scores ===============")
     for input in inputs:
-        # Added [0] to the end to get the only Value of the list after the activation
         scores.append(model[](x = input[])[0])
-        """Here, each list of scores becomes a 1 element list."""
-    
+        """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
     return scores
 
 fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> ArcPointer[Value]:
+    """Validate the weighted output against the expected output."""
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
     #svm "max-margin" loss
@@ -85,7 +89,10 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
         var yi: Float64 = yb.item(i).to_float64()
         var scorei = scores[i]
         #TODO: Consider using log for classification
+        #TODO: maybe change Value(yi) to yi
+        # Loss=max⁡(0,1−y⋅score)
         losses.append((1 + (-Value(yi) * scorei[])).relu())
+        """We want to check if the trulabel * prediction is less than 1"""
     
     print("After calculating losses")
     print(len(losses))
@@ -93,6 +100,7 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
     var data_loss = ArcPointer[Value](Value(0))
     for loss in losses:
         data_loss[] += loss[][]
+        """Add since we want the model loss"""
     data_loss[] *= Value(1.0 / Float64(len(losses)))
 
     print("Sum of the data loss")
@@ -150,6 +158,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     print("len input: ", len(inputs))
 
     # This is the forward
+    #TODO: print scores to see prediction
     var scores = make_forward(model, inputs)
     """These are the 'outputs' of the model"""
 
@@ -170,6 +179,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 fn create_mlp_model() raises:
     # initialize a model 
     model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network and 1 layer-output
+    #model = MLP(2, List[Int](16, 16, 4, 1)) # 2-layer neural network and 1 layer-output
     print(repr(model))
     print("number of parameters", len(model.parameters()))
 
@@ -187,7 +197,8 @@ fn create_mlp_model() raises:
     y = y * 2 - 1
   
     #for k in range(100):
-    for k in range(120):
+    var i = 10
+    for k in range(i):
         try:
             var total_loss: ArcPointer[Value]
             var acc: Float64
@@ -206,7 +217,7 @@ fn create_mlp_model() raises:
             total_loss[].backward()
 
             # update (sgd)
-            var learning_rate : Float64 = 1.0 - 0.9 * k/100 
+            var learning_rate : Float64 = 1.0 - 0.9 * k/i 
             for p in model.parameters():
                 print(repr(p[][]))
                 p[][].data[] -= learning_rate * p[][].grad[]

@@ -31,6 +31,9 @@ struct Neuron:
       Number of weigths of the neuron or how many values expects to receive.
     nonlin: 
       If non-linearity is applied to the neuron's activation.
+    x:
+      Input data.
+      len(x) should be == len(w). Otherwise would require zero padding.
 
     Activation
     ----------
@@ -57,25 +60,18 @@ struct Neuron:
         self.nonlin = nonlin
 
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
-        """This is basically a relation making operation.
-        len(x) should be >= len(w). Otherwise makes no sense."""
-        #var act = Value(data = self.b) # Evaluate this
+        #var act = Value(data = self.b) #TODO: Evaluate this
         var act = Value(data = self.b[].data[])
 
         #TODO: Check vector operation
         #print("Neuron class =========")
         #print("len w : " + str(len(self.w)))
-        # W should have the same length as X
         for i in range(len(self.w)):
-            """On each layer activation, the neuron takes the layer's input, multiplies it
-            by it's weigth and sum it."""
             #print(str(act.data[]))
             #act.data[] += (self.w[i][].data[] * x[i][].data[])
             act += (self.w[i][] * x[i][]) # weigth inputs and linear combination
-            """This sum represent all input's collective influence on the neuron."""
 
         if self.nonlin[]:
-            """Activation function. Used to learn more complex patterns by including non-linearity"""
             return act.relu()
         else:
             return act
@@ -100,8 +96,7 @@ struct Neuron:
       
     fn __repr__(self) -> String:
         var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
-        # We can add Value repr fo w if the full detail is wanted
-        return neuron_type + " Neuron(" + str(len(self.w)) + ")"
+        return neuron_type + " Neuron( w: " + str(len(self.w)) + ")"
       
     fn __repr__(self, full: Bool = False) -> String:
         var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
@@ -112,7 +107,6 @@ struct Neuron:
                 neuron_type += ", " + repr(self.w[i][])
             neuron_type += "]"
 
-        # We can add Value repr fo w if the full detail is wanted
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
 struct Layer:
@@ -137,6 +131,8 @@ struct Layer:
       Number of neurons per layer or how many values will this layer output.
     kwargs: 
       If relu is applied to the output of every neuron.
+    x:
+      Input data.
 
     Activation
     ----------
@@ -184,12 +180,45 @@ struct Layer:
         return neurons_repr
 
 struct MLP:
+    """
+    Simple MLP model that implements fully connected layers.
+    
+    Input
+    ----------
+    A list of Values.
+
+    Returns
+    ----------
+    A list of scores.
+
+    Parameters
+    ----------
+    nin:  
+      Number of weigths per neuron of the first layer or how many values will be passed 
+      initially to the model.
+    nouts: 
+      Number of neurons per layer or how many values will each layer output.
+    kwargs: 
+      If relu is applied to the output of every neuron.
+    x:
+      Input data.
+
+    Activation
+    ----------
+    The input data is weigthed through all the layer's neurons and the output
+    is passed through the next layers.
+
+    Examples
+    ----------    
+    A model the expect an input of x1, x2.
+    Layer 1: Input 2, Output 16
+    Layer 2: Input 16, Output 1
+    model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network and 1 layer-output
+
+    """
     #TODO: Maybe this needs to be pointer
     var layers : List[ArcPointer[Layer]]
     fn __init__(out self, nin: Int, nouts: List[Int]):
-        """Nin: Input data to the model's first Layer, X
-        nouts: Out of each layers, equal to the number of neurons.
-        """
         #var sz = List[Int](nin) + nouts
         var sz = List[Int]()
         sz.append(nin)
@@ -198,15 +227,12 @@ struct MLP:
         self.layers = List[ArcPointer[Layer]]()
 
         for i in range(len(nouts)):
-            # nin = Number of wigths per layer's neuron
-            # nout = Number of neurons per layer
             self.layers.append(Layer(nin = sz[i], nout = sz[i + 1], kwargs = (i != len(nouts) - 1)))
-            """This makes the number of neurons of the current layer equals to the number of weights of eahc neuron
+            """This makes the number of neurons of the current layer equals to the number of weights of each neuron
             of the next layer."""
 
     fn __call__(self, mut x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
         for layer in self.layers:
-            """Here we activate the layer and assign the output to the input of the next."""
             x = layer[][](x)
         
         return x
