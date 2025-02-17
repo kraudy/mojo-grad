@@ -61,7 +61,8 @@ struct Neuron:
 
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
         #var act = Value(data = self.b) #TODO: Evaluate this
-        var act = Value(data = self.b[].data[])
+        #var act = Value(data = self.b[].data[])
+        var act = Value(0)
 
         #TODO: Check vector operation
         #print("Neuron class =========")
@@ -70,7 +71,10 @@ struct Neuron:
             #print(str(act.data[]))
             #act.data[] += (self.w[i][].data[] * x[i][].data[])
             act += (self.w[i][] * x[i][]) # weigth inputs and linear combination
+            #act += (self.w[i][] * x[i][]).relu() if self.nonlin[] else (self.w[i][] * x[i][])
 
+        act += self.b[]
+        
         if self.nonlin[]:
             return act.relu()
         else:

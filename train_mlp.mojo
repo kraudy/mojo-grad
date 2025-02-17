@@ -107,8 +107,8 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
     print("Sum of the data loss")
     print(repr(data_loss[]))
 
-    #var alpha = 1e-4
-    var alpha = 1e-5
+    var alpha = 1e-4
+    #var alpha = 1e-3
     var reg_loss = ArcPointer[Value](Value(0))
     for p in model[].parameters():
         reg_loss[] += (p[][] * p[][])
@@ -200,7 +200,7 @@ fn create_mlp_model() raises:
     y = y * 2 - 1
   
     #for k in range(100):
-    var i = 20
+    var i = 50
     for k in range(i):
         try:
             var total_loss: ArcPointer[Value]
