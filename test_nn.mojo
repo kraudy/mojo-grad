@@ -91,9 +91,10 @@ fn main():
         plt.show()
 
     fn test_neuron() raises:
-        # Create Neuron with 2 rand weigths Value and 0 bias Value
+        # Create Neuron with 2 rand weigths Value and 1 bias
         var neuron = Neuron(2)    
         # This is the input to the neuron
+        # can be array of numbers i think
         var x = List[ArcPointer[Value]](Value(2), Value(3))
 
         #TODO: Note how X and W must have the same length. Maybe this can be changed
@@ -155,8 +156,8 @@ fn main():
     try:
         #test1()
         #test2()
-        showmoons()
-        #test_neuron()
+        #showmoons()
+        test_neuron()
         #test_layer()
         #test_mlp()
     except e:

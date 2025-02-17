@@ -1,8 +1,9 @@
 """ """
 
-from random import random_float64
-from memory import ArcPointer
+from random import random_float64, rand
+from memory import ArcPointer, UnsafePointer
 from .engine import Value
+from math import sqrt
 
 struct Module:
     fn zero_grad(self):
@@ -37,36 +38,38 @@ struct Neuron:
 
     Activation
     ----------
-    The input data is weigthed against the neuron's weigths plus bias and then sum up to 
+    The input data is weigthed (multiplied) against the neuron's and then sum up (scalar product) to 
     get the neuron's influence on the data.
+    len(a) = len(b)
+    a . b = sum(a[i]*b[i]) for in range(len(a))
 
     Examples
     ----------    
 
     """
-    #TODO: Maybe this needs to be a pointer
     var w : List[ArcPointer[Value]]
     var b : ArcPointer[Value]
     var nonlin : ArcPointer[Bool]
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[ArcPointer[Value]]()
+        
         for _ in range(nin):
             """Values between -1 and 1 for weigthing."""
             var rand = random_float64(-1.0, 1.0)
+            """This gives better convergence than these
+            bound = Float64(1 / sqrt(nin)); random_float64(-bound, bound)
+            rand(foo, nin, min=-bound, max=bound)
+            """
             self.w.append(ArcPointer[Value](Value(rand)))
 
         self.b = Value(0)
         self.nonlin = nonlin
 
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
-        #var act = Value(data = self.b) #TODO: Evaluate this
-        #var act = Value(data = self.b[].data[])
         var act = Value(0)
 
-        #TODO: Check vector operation
-        #print("Neuron class =========")
-        #print("len w : " + str(len(self.w)))
+        #TODO: Evaluate vector operations
         for i in range(len(self.w)):
             #print(str(act.data[]))
             #act.data[] += (self.w[i][].data[] * x[i][].data[])
@@ -74,7 +77,7 @@ struct Neuron:
             #act += (self.w[i][] * x[i][]).relu() if self.nonlin[] else (self.w[i][] * x[i][])
 
         act += self.b[]
-        
+
         if self.nonlin[]:
             return act.relu()
         else:
