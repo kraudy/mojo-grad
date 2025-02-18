@@ -217,48 +217,35 @@ struct Value():
         return out
 
     @staticmethod
-    #fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
-    #TODO: Check if ArcPointer[List[ArcPointer[Value]]] is needed or just List[ArcPointer[Value]] 
-    fn build_topo(self_ptr: ArcPointer[Value], mut visited: ArcPointer[List[ArcPointer[Value]]], mut topo: ArcPointer[List[ArcPointer[Value]]]):
+    #TODO: Change to mut self here and remove static
+    fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
 
-        #print("Build topo")
-
-        #if UnsafePointer[Value].address_of(self_ptr) in visited:
-        #    return
-        #if ArcPointer[Value].address_of(self_ptr[]) in visited:
         #TODO: This should be optimized
-        for vis in visited[]:
-            #if self_ptr.__is__(vis[][]):
+        for vis in visited:
             if self_ptr[] == vis[][]:
                 return
-            
-        #print("Entering not visited")
-        #visited.append(UnsafePointer.address_of(self_ptr))
-        visited[].append(self_ptr)
-        #print(len(visited[]))
+
+        #TODO: Maybe we don't need to add the leaf nodes to the topo since they don't update any grad
+        # if self_ptr[]._op == "" return
+        visited.append(self_ptr)
         if len(self_ptr[]._prev) > 0:
-            #print("Entered _prev1 != UnsafePointer[Value]()")
             Value.build_topo(self_ptr[]._prev[0], visited, topo)
 
         if len(self_ptr[]._prev) == 2:
-            #print("Entered _prev2 != UnsafePointer[Value]()")
             Value.build_topo(self_ptr[]._prev[1], visited, topo)
         
-        #topo.append(UnsafePointer[Value].address_of(self_ptr))
-        topo[].append(self_ptr)
-        #print(len(topo[]))
+        topo.append(self_ptr)
 
     fn backward(mut self):
-        #TODO: Check: visited = List[ArcPointer[Value]]()
-        var visited = ArcPointer[List[ArcPointer[Value]]](List[ArcPointer[Value]]())
-        #var topo = List[ArcPointer[Value]]()
-        var topo = ArcPointer[List[ArcPointer[Value]]](List[ArcPointer[Value]]())
+        #TODO: Optimize this, maybe with a stack.
+        var visited = List[ArcPointer[Value]](List[ArcPointer[Value]]())
+        var topo = List[ArcPointer[Value]](List[ArcPointer[Value]]())
 
         print("previous topo")
-        print(len(topo[]))
-        print(len(visited[]))
+        print(len(topo))
+        print(len(visited))
 
-        #TODO: Validate if this pointer is needes
+        #TODO: Validate if this pointer is needed
         var self_ref = ArcPointer[Value](self)
 
         Value.build_topo(self_ref, visited, topo)
@@ -266,10 +253,10 @@ struct Value():
         self.grad[] = Float64(1)
 
         print(repr(self))
-        print(repr(topo[][-1][]))
+        print(repr(topo[-1][]))
         print("================")
 
-        for v_ptr in reversed(topo[]):
+        for v_ptr in reversed(topo):
             #print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             var v = v_ptr[][]
