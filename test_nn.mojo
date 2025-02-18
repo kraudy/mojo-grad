@@ -10,20 +10,15 @@ fn main():
     fn test1() raises:
         """ Creates a Neuron with 10 weights that should received array of 10 inputs"""
         var n = Neuron(10)
-        #var x = List[Value](Value(1.0), Value(-2.0))
-        #TODO: Check if this Arcpointer is neede
-        var x = List[ArcPointer[Value]]()
-        #var x = List[ArcPointer[Value]](ArcPointer[Value](Value(1.0)), ArcPointer[Value](Value(-2.0)))
+        var x = List[Float64]()
         for _ in range(10):
             var rand = random_float64(-1.0, 1.0)
-            x.append(ArcPointer[Value](Value(rand)))
+            x.append(rand)
         var y = n(x)
         y.backward()
         print("Neuron test")
-        print("y")
-        print(repr(y))
-        print("Neuron")
-        print(repr(n))
+        print("y: ", repr(y))
+        print("Neuron: ", repr(n))
         for a in n.parameters():
             print(repr(a[][]))
 
@@ -154,10 +149,10 @@ fn main():
     
 
     try:
-        #test1()
+        test1()
         #test2()
         #showmoons()
-        test_neuron()
+        #test_neuron()
         #test_layer()
         #test_mlp()
     except e:

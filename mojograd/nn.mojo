@@ -38,9 +38,9 @@ struct Neuron:
 
     Activation
     ----------
-    The input data is weigthed (multiplied) against the neuron's and then sum up (scalar product) to 
+    The input data is weigthed (multiplied) against the neuron's and then sumed up (scalar product) to 
     get the neuron's influence on the data.
-    len(a) = len(b)
+    len(a) == len(b)
     a . b = sum(a[i]*b[i]) for in range(len(a))
 
     Examples
@@ -69,12 +69,25 @@ struct Neuron:
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
         var act = Value(0)
 
-        #TODO: Evaluate vector operations
+        #TODO: Consider SIMD operations
         for i in range(len(self.w)):
-            #print(str(act.data[]))
-            #act.data[] += (self.w[i][].data[] * x[i][].data[])
-            act += (self.w[i][] * x[i][]) # weigth inputs and linear combination
-            #act += (self.w[i][] * x[i][]).relu() if self.nonlin[] else (self.w[i][] * x[i][])
+            act += (self.w[i][] * x[i][])
+            """Scalar product."""
+
+        act += self.b[]
+
+        if self.nonlin[]:
+            return act.relu()
+        else:
+            return act
+
+    fn __call__(self, x : List[Float64]) -> Value:
+        var act = Value(0)
+
+        #TODO: Consider SIMD operations
+        for i in range(len(self.w)):
+            act += (self.w[i][] * x[i])
+            """Scalar product."""
 
         act += self.b[]
 
