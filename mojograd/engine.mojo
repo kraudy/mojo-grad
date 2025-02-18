@@ -16,27 +16,30 @@ struct Value():
     var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
     # var _prev :  Set[Value]
+    #TODO: There has to be a better way to do this.
     var _prev : List[ArcPointer[Value]]
 
     var _op : String
 
     #TODO: Validate if this ArcPointer[Float64] is needed or just Float64 since data is already ArcPointer
     #TODO: Consider changin inout to out
-    fn __init__(inout self, data: ArcPointer[Float64]):
-        
-        self.data = data
-        self.grad =  ArcPointer[Float64](0)
+    #fn __init__(inout self, data: ArcPointer[Float64]):
+    #    
+    #    self.data = data
+    #    self.grad =  ArcPointer[Float64](0)
 
-        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
-        self._prev = List[ArcPointer[Value]]()
+    #    self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+    #    self._prev = List[ArcPointer[Value]]()
 
 
-        self._op = String('') 
+    #    self._op = String('') 
 
     fn __init__(inout self, data: Float64):
         
-        self.data = ArcPointer[Float64](data)
-        self.grad =  ArcPointer[Float64](0)
+        #self.data = ArcPointer[Float64](data)
+        self.data = data
+        #self.grad =  ArcPointer[Float64](0)
+        self.grad =  0.0
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev = List[ArcPointer[Value]]()
@@ -44,10 +47,22 @@ struct Value():
 
         self._op = String('') 
 
-    fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, op: String):
+    #fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, op: String):
+    #    
+    #    self.data = data
+    #    self.grad =  ArcPointer[Float64](0)
+
+    #    self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+
+    #    self._prev = List[ArcPointer[Value]]()
+    #    self._prev.append(ArcPointer[Value](prev1))
+
+    #    self._op = op
+
+    fn __init__(inout self, data: Float64, prev1: Value, op: String):
         
         self.data = data
-        self.grad =  ArcPointer[Float64](0)
+        self.grad = 0.0
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
@@ -56,9 +71,21 @@ struct Value():
 
         self._op = op
 
-    fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, prev2: Value, op: String):
+    #fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, prev2: Value, op: String):
+    #    self.data = data
+    #    self.grad =  ArcPointer[Float64](0)
+
+    #    self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+
+    #    self._prev = List[ArcPointer[Value]]()
+    #    self._prev.append(ArcPointer[Value](prev1))
+    #    self._prev.append(ArcPointer[Value](prev2))
+
+    #    self._op = op
+
+    fn __init__(inout self, data: Float64, prev1: Value, prev2: Value, op: String):
         self.data = data
-        self.grad =  ArcPointer[Float64](0)
+        self.grad = 0.0
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
 
@@ -91,7 +118,8 @@ struct Value():
         self._prev[1][].grad[] += self.grad[]
 
     fn __add__(self, other: Value) -> Value:
-        var out = Value(data = (ArcPointer[Float64](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
+        #var out = Value(data = (ArcPointer[Float64](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
+        var out = Value(data = (self.data[] + other.data[]), prev1 = self, prev2 = other, op = '+')
 
         return out
 
@@ -138,7 +166,8 @@ struct Value():
         self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
 
     fn __mul__(self, other: Value) -> Value:
-        var out = Value(data = (ArcPointer[Float64](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
+        #var out = Value(data = (ArcPointer[Float64](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
+        var out = Value(data = (self.data[] * other.data[]), prev1 = self, prev2 = other, op = '*')
 
         return out
 
@@ -244,28 +273,20 @@ struct Value():
             #print("for reversed")
             # Note the double [] needed, the first for the iterator and the second for the pointer
             var v = v_ptr[][]
-            #print(repr(v))
-            #TODO: Maybe add v._op == " " at first to skip leaf nodes
+            if v._op == "":
+                continue
             if v._op == "+":
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
                 v.backward_add()
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
-            elif v._op == "*":
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
+                continue
+            if v._op == "*":
                 v.backward_mul()
-                #print(repr(v._prev[0][]))
-                #print(repr(v._prev[1][]))
-            elif v._op == "**":
-                #print(repr(v._prev[0][]))
+                continue
+            if v._op == "**":
                 v.backward_pow()
-                #print(repr(v._prev[0][]))
-            elif v._op == "ReLu":
-                #print(repr(v._prev[0][]))
+                continue
+            if v._op == "ReLu":
                 v.backward_relu()
-                #print(repr(v._prev[0][]))
+                continue
     
     fn __repr__(self) -> String:
         return "data: " + str(self.data[]) + " | grad: " + str(self.grad[]) + " | Op: " + self._op

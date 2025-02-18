@@ -176,6 +176,7 @@ struct Layer:
         for i in range(len(self.neurons)):
             out.append(self.neurons[i][](x = x))
         
+        #return out[0] if len(out) == 1 else out
         return out
     
     fn parameters(self) -> List[ArcPointer[Value]]:
@@ -255,6 +256,7 @@ struct MLP:
         for layer in self.layers:
             x = layer[][](x)
         
+        #return x[0] if len(x) == 1 else x
         return x
         """The output can be a List of one value or multiple. This deppends on the last layer output"""
 

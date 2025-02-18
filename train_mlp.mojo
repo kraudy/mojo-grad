@@ -108,7 +108,6 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
     print(repr(data_loss[]))
 
     var alpha = 1e-4
-    #var alpha = 1e-3
     var reg_loss = ArcPointer[Value](Value(0))
     for p in model[].parameters():
         reg_loss[] += (p[][] * p[][])
@@ -214,8 +213,8 @@ fn create_mlp_model() raises:
             #TODO: Implement this with trait 
             for out in model.parameters():
                 out[][].grad[] = 0
-                """The use of the grad is to update the Neuron data so that the next 
-                forward pass gives better results. Which makes the model 'learn'."""
+                """Needs to be reset because the grads are added. Not zeroing
+                grads is one of the most common mistakes."""
 
             total_loss[].backward()
 
@@ -225,8 +224,9 @@ fn create_mlp_model() raises:
                 print(repr(p[][]))
                 p[][].data[] -= learning_rate * p[][].grad[]
                 print(repr(p[][]))
-                """Note how the grad is used to update the same Value data and the 
-                learning_rate damps the influence as the iterations increases"""
+                """This is what really makes the model 'learn'
+                If the grad is positive, the neuron increaces the loss, hence we reduce it: - * + = -.
+                If the grad is negative, the neuron decreses the loss (what we want) hence increce it: - * - = +"""
             
             #if k % 1 == 0:
             print("Step: ", k, " | loss data: ", total_loss[].data[], " | loss grad: ", total_loss[].grad[] , " | accuracy: ", acc*100)
