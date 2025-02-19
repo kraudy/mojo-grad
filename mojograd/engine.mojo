@@ -97,12 +97,12 @@ struct Value():
 
     fn __moveinit__(out self, owned existing: Self):
         # Validate ^
-        self.data = existing.data
-        self.grad = existing.grad
+        self.data = existing.data^
+        self.grad = existing.grad^
         # Validate
-        self._func = existing._func
-        self._prev = existing._prev
-        self._op = existing._op
+        self._func = existing._func#^
+        self._prev = existing._prev^
+        self._op = existing._op^
     
     fn __copyinit__(out self, existing: Self):
         self.data = existing.data
