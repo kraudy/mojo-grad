@@ -225,16 +225,22 @@ struct Value():
             if self_ptr[] == vis[][]:
                 return
 
-        #TODO: Maybe we don't need to add the leaf nodes to the topo since they don't update any grad
-        # if self_ptr[]._op == "" return
         visited.append(self_ptr)
-        if len(self_ptr[]._prev) > 0:
-            Value.build_topo(self_ptr[]._prev[0], visited, topo)
 
-        if len(self_ptr[]._prev) == 2:
-            Value.build_topo(self_ptr[]._prev[1], visited, topo)
+        if self_ptr[]._op == "": return
+        """
+        We don't need to add the leaf nodes to the topo list since they have no other node to propagate
+        the grad.
+        """
+
+        Value.build_topo(self_ptr[]._prev[0], visited, topo)
+        """All the non-leaf nodes are the op result of at least one previous node."""
+
+        if len(self_ptr[]._prev) == 2: Value.build_topo(self_ptr[]._prev[1], visited, topo)
+        """Nodes tha are the result of usual arithmetic operations have two previous nodes."""
         
         topo.append(self_ptr)
+        """Nodes ordered from last non-leaf (first layer) node to output node (usually loss node)."""
 
     fn backward(mut self):
         #TODO: Optimize this, maybe with a stack.
@@ -248,31 +254,32 @@ struct Value():
         #TODO: Validate if this pointer is needed
         var self_ref = ArcPointer[Value](self)
 
+        #TODO: Validate just passing self
         Value.build_topo(self_ref, visited, topo)
 
-        self.grad[] = Float64(1)
+        self.grad[] = 1.0
 
         print(repr(self))
         print(repr(topo[-1][]))
         print("================")
 
-        for v_ptr in reversed(topo):
-            #print("for reversed")
+        for v in reversed(topo):
+            """
+            This reversed give us the order: 
+            From output node (loss) to last non-leaf node (usually first layer's neurons).
+            """
             # Note the double [] needed, the first for the iterator and the second for the pointer
-            var v = v_ptr[][]
-            if v._op == "":
+            if v[][]._op == "+":
+                v[][].backward_add()
                 continue
-            if v._op == "+":
-                v.backward_add()
+            if v[][]._op == "*":
+                v[][].backward_mul()
                 continue
-            if v._op == "*":
-                v.backward_mul()
+            if v[][]._op == "**":
+                v[][].backward_pow()
                 continue
-            if v._op == "**":
-                v.backward_pow()
-                continue
-            if v._op == "ReLu":
-                v.backward_relu()
+            if v[][]._op == "ReLu":
+                v[][].backward_relu()
                 continue
     
     fn __repr__(self) -> String:
