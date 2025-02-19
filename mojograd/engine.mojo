@@ -5,7 +5,6 @@
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 
-
 # Validate alias : fn() escaping -> None, alignment=1
 
 struct Value():
@@ -21,6 +20,7 @@ struct Value():
 
     var _op : String
 
+    @always_inline
     fn __init__(inout self, data: Float64):
         self.data = data
         self.grad =  0.0
@@ -72,20 +72,20 @@ struct Value():
         self._prev[0][].grad[] += self.grad[]
         self._prev[1][].grad[] += self.grad[]
 
+    @always_inline
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] + other.data[]), prev1 = self, prev2 = other, op = '+')
-
         return out
 
     fn __add__(self, other: Float64) -> Value:
-        # We are only making the conversion and reusing the value __add__ logic
         var v = Value(other)
         return self + v
     
     fn __radd__(self, other: Float64) -> Value:
-        # When adding the order is indifferent
-        return self.__add__(other)
+        # When adding, the order is indifferent
+        return self + other
 
+    @always_inline
     fn __neg__(self) -> Value:
         return self * (-1)
 
@@ -119,20 +119,18 @@ struct Value():
         self._prev[0][].grad[] += self._prev[1][].data[] * self.grad[]
         self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
 
+    @always_inline
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] * other.data[]), prev1 = self, prev2 = other, op = '*')
-
         return out
 
     fn __mul__(self, other: Float64) -> Value:
-        # We are only making the conversion and reusing the value __mul__ logic
         var v = Value(other)
         return self * v
     
     fn __rmul__(self, other: Float64) -> Value:
-        # When adding the order is indifferent
-        #TODO: Change to self * other
-        return self.__mul__(other)
+        # When multiply, the order is indifferent
+        return self * other
 
     fn __imul__ (inout self, other: Value):
         var out = self * other
@@ -142,12 +140,14 @@ struct Value():
         var out = self * other
         self = out
     
+    @always_inline
     fn __eq__(self, other: Self) -> Bool:
         return self.data.__is__(other.data) 
 
     fn backward_pow(mut self):
         self._prev[0][].grad[] += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad[]
 
+    @always_inline
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data[] ** other.data[]), prev1 = self, prev2 = other, op = '**')
 
@@ -169,31 +169,30 @@ struct Value():
         
         return out
 
-    @staticmethod
-    #TODO: Change to mut self here and remove static
-    fn build_topo(self_ptr: ArcPointer[Value], mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
+    fn build_topo(self, mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
 
         #TODO: This should be optimized
         for vis in visited:
-            if self_ptr[] == vis[][]:
+            if self == vis[][]:
                 return
 
-        visited.append(self_ptr)
+        visited.append(self)
 
-        if self_ptr[]._op == "": return
+        if self._op == "": return
         """
         We don't need to add the leaf nodes to the topo list since they have no other node to propagate
         the grad.
         """
 
-        for v in self_ptr[]._prev: Value.build_topo(v[][], visited, topo)
+        #for v in self._prev: Value.build_topo(v[][], visited, topo)
+        for v in self._prev: v[][].build_topo(visited, topo)
         """
         All the non-leaf nodes are the op result of at least one previous node.
         Usual arithmetic operations output nodes have two previous nodes.
         """
         
-        topo.append(self_ptr)
-        """Nodes ordered from last non-leaf (first layer) node to output node (usually loss node)."""
+        topo.append(self)
+        """Nodes ordered from last non-leaf (first layer) to output (usually loss)."""
 
     fn backward(mut self):
         #TODO: Optimize this, maybe with a stack.
@@ -201,20 +200,11 @@ struct Value():
         var topo = List[ArcPointer[Value]](List[ArcPointer[Value]]())
 
         print("previous topo")
-        print(len(topo))
-        print(len(visited))
 
-        #TODO: Validate if this pointer is needed
-        var self_ref = ArcPointer[Value](self)
-
-        #TODO: Validate just passing self
-        Value.build_topo(self_ref, visited, topo)
+        self.build_topo(visited, topo)
 
         self.grad[] = 1.0
-
-        print(repr(self))
-        print(repr(topo[-1][]))
-        print("================")
+        """If the first node's grad is 0, the chain rule will make all previous nodes 0."""
 
         for v in reversed(topo):
             """
