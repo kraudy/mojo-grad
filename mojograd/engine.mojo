@@ -186,11 +186,11 @@ struct Value():
         the grad.
         """
 
-        Value.build_topo(self_ptr[]._prev[0], visited, topo)
-        """All the non-leaf nodes are the op result of at least one previous node."""
-
-        if len(self_ptr[]._prev) == 2: Value.build_topo(self_ptr[]._prev[1], visited, topo)
-        """Nodes tha are the result of usual arithmetic operations have two previous nodes."""
+        for v in self_ptr[]._prev: Value.build_topo(v[][], visited, topo)
+        """
+        All the non-leaf nodes are the op result of at least one previous node.
+        Usual arithmetic operations output nodes have two previous nodes.
+        """
         
         topo.append(self_ptr)
         """Nodes ordered from last non-leaf (first layer) node to output node (usually loss node)."""
