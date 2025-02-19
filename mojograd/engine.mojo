@@ -21,46 +21,16 @@ struct Value():
 
     var _op : String
 
-    #TODO: Validate if this ArcPointer[Float64] is needed or just Float64 since data is already ArcPointer
-    #TODO: Consider changin inout to out
-    #fn __init__(inout self, data: ArcPointer[Float64]):
-    #    
-    #    self.data = data
-    #    self.grad =  ArcPointer[Float64](0)
-
-    #    self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
-    #    self._prev = List[ArcPointer[Value]]()
-
-
-    #    self._op = String('') 
-
     fn __init__(inout self, data: Float64):
-        
-        #self.data = ArcPointer[Float64](data)
         self.data = data
-        #self.grad =  ArcPointer[Float64](0)
         self.grad =  0.0
 
         self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
         self._prev = List[ArcPointer[Value]]()
 
-
         self._op = String('') 
 
-    #fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, op: String):
-    #    
-    #    self.data = data
-    #    self.grad =  ArcPointer[Float64](0)
-
-    #    self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
-
-    #    self._prev = List[ArcPointer[Value]]()
-    #    self._prev.append(ArcPointer[Value](prev1))
-
-    #    self._op = op
-
     fn __init__(inout self, data: Float64, prev1: Value, op: String):
-        
         self.data = data
         self.grad = 0.0
 
@@ -70,18 +40,6 @@ struct Value():
         self._prev.append(ArcPointer[Value](prev1))
 
         self._op = op
-
-    #fn __init__(inout self, data: ArcPointer[Float64], prev1: Value, prev2: Value, op: String):
-    #    self.data = data
-    #    self.grad =  ArcPointer[Float64](0)
-
-    #    self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
-
-    #    self._prev = List[ArcPointer[Value]]()
-    #    self._prev.append(ArcPointer[Value](prev1))
-    #    self._prev.append(ArcPointer[Value](prev2))
-
-    #    self._op = op
 
     fn __init__(inout self, data: Float64, prev1: Value, prev2: Value, op: String):
         self.data = data
@@ -96,7 +54,6 @@ struct Value():
         self._op = op
 
     fn __moveinit__(out self, owned existing: Self):
-        # Validate ^
         self.data = existing.data^
         self.grad = existing.grad^
         # Validate
@@ -107,18 +64,15 @@ struct Value():
     fn __copyinit__(out self, existing: Self):
         self.data = existing.data
         self.grad = existing.grad
-        # Validate pointee copy
         self._func = existing._func
         self._prev = existing._prev
         self._op = existing._op
-        #self =  existing
       
     fn backward_add(mut self):
         self._prev[0][].grad[] += self.grad[]
         self._prev[1][].grad[] += self.grad[]
 
     fn __add__(self, other: Value) -> Value:
-        #var out = Value(data = (ArcPointer[Float64](self.data[] + other.data[])), prev1 = self, prev2 = other, op = '+')
         var out = Value(data = (self.data[] + other.data[]), prev1 = self, prev2 = other, op = '+')
 
         return out
@@ -166,7 +120,6 @@ struct Value():
         self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
 
     fn __mul__(self, other: Value) -> Value:
-        #var out = Value(data = (ArcPointer[Float64](self.data[] * other.data[])), prev1 = self, prev2 = other, op = '*')
         var out = Value(data = (self.data[] * other.data[]), prev1 = self, prev2 = other, op = '*')
 
         return out
