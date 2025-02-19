@@ -5,8 +5,6 @@
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 
-# Validate alias : fn() escaping -> None, alignment=1
-
 struct Value():
     var data: ArcPointer[Float64]
     var grad :  ArcPointer[Float64]
@@ -68,6 +66,7 @@ struct Value():
         self._prev = existing._prev
         self._op = existing._op
       
+    @always_inline
     fn backward_add(mut self):
         self._prev[0][].grad[] += self.grad[]
         self._prev[1][].grad[] += self.grad[]
@@ -115,6 +114,7 @@ struct Value():
     fn __rtruediv__(self, other: Float64) -> Value:
         return other * (self ** -1)
     
+    @always_inline
     fn backward_mul(mut self):
         self._prev[0][].grad[] += self._prev[1][].data[] * self.grad[]
         self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
@@ -144,6 +144,7 @@ struct Value():
     fn __eq__(self, other: Self) -> Bool:
         return self.data.__is__(other.data) 
 
+    @always_inline
     fn backward_pow(mut self):
         self._prev[0][].grad[] += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad[]
 
@@ -157,6 +158,7 @@ struct Value():
         var v = Value(other)
         return self ** v
 
+    @always_inline
     fn backward_relu(mut self):
         if self.data[] > 0:
             self._prev[0][].grad[] += self.grad[]
