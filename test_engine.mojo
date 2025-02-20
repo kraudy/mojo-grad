@@ -6,7 +6,7 @@ from testing import assert_almost_equal, assert_true, assert_equal
 from python import Python
 
 fn main():
-    fn test1() raises:
+    fn old_mojograd_test() raises:
         var a = Value(data = 2.0)
         var b = Value(data = 3.0)
         var c = Float64(2.0)
@@ -18,15 +18,10 @@ fn main():
         assert_equal(e.data[], 4.0, "e should be 4.0")
         
         e.backward()
-        print("Results =============")
         assert_equal(b.grad[], 0.0, "b grad should be 0.0")
         assert_equal(a.grad[], 1.0, "a grad should be 1.0")
-
-        print(repr(a))
-        print(repr(b))
-
     
-    fn test2() raises:
+    fn micrograd_test() raises:
         a = Value(-4.0)
         b = Value(2.0)
         c = a + b 
@@ -60,15 +55,11 @@ fn main():
         assert_equal(g.data[], 24.70408163265306, "g should be almost 24.70408163265306")
 
         g.backward()
-        print("Results ===============================")
+
         assert_equal(b.grad[], 645.5772594752186, "b grad should be almost 645.5772594752186")
         assert_equal(a.grad[], 138.83381924198252, "a grad should be almost 138.83381924198252")
-        print(repr(b))
-        print(repr(a))
 
-    
-    fn test3() raises:
-        """Karpathy sanity check"""
+    fn karpathy_sanitiy_check() raises:
         var x = Value(data = -4.0)
         var z = 2 * x + 2 + x
         var q = z.relu() + z * x
@@ -77,15 +68,12 @@ fn main():
         assert_equal(y.data[], -20.0, "y data should be -20")
         
         y.backward()
-        print("Results =============")
         assert_equal(x.grad[], 46.0, "x grad should be 46.0")
-        print(repr(x))
-
 
     try:
-        test1()
-        test2()
-        test3()
+        old_mojograd_test()
+        micrograd_test()
+        karpathy_sanitiy_check()
         print("All good!")
     except e:
         print(e)

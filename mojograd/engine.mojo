@@ -152,7 +152,6 @@ struct Value():
     @always_inline
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data[] ** other.data[]), prev1 = self, prev2 = other, op = '**')
-
         return out
     
     fn __pow__(self, other: Float64) -> Value:
@@ -169,12 +168,11 @@ struct Value():
 
     fn relu(self) -> Value:
         var out = Value(data = (Float64(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
-        
         return out
 
     fn build_topo(self, mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
 
-        #TODO: This should be optimized
+        #TODO: Optimize this. Currently O(n), could be O(1)
         for vis in visited:
             if self == vis[][]:
                 return
@@ -187,7 +185,6 @@ struct Value():
         the grad.
         """
 
-        #for v in self._prev: Value.build_topo(v[][], visited, topo)
         for v in self._prev: v[][].build_topo(visited, topo)
         """
         All the non-leaf nodes are the op result of at least one previous node.
@@ -202,12 +199,10 @@ struct Value():
         var visited = List[ArcPointer[Value]](List[ArcPointer[Value]]())
         var topo = List[ArcPointer[Value]](List[ArcPointer[Value]]())
 
-        print("previous topo")
-
         self.build_topo(visited, topo)
 
         self.grad[] = 1.0
-        """If the first node's grad is 0, the chain rule will make all previous nodes 0."""
+        """If the first node's grad is 0, the chain rule will affect badly all previous nodes."""
 
         for v in reversed(topo):
             """
