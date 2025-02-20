@@ -20,7 +20,7 @@ struct Value():
     var _op : String
 
     @always_inline
-    fn __init__(inout self, data: Float64):
+    fn __init__(out self, data: Float64):
         self.data = data
         self.grad =  0.0
 
@@ -29,7 +29,7 @@ struct Value():
 
         self._op = String('') 
 
-    fn __init__(inout self, data: Float64, prev1: Value, op: String):
+    fn __init__(out self, data: Float64, prev1: Value, op: String):
         self.data = data
         self.grad = 0.0
 
@@ -40,7 +40,7 @@ struct Value():
 
         self._op = op
 
-    fn __init__(inout self, data: Float64, prev1: Value, prev2: Value, op: String):
+    fn __init__(out self, data: Float64, prev1: Value, prev2: Value, op: String):
         self.data = data
         self.grad = 0.0
 
