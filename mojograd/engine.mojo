@@ -6,6 +6,7 @@ from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 
 struct Value():
+    #TODO: Validate if this ArcPointer is needed
     var data: ArcPointer[Float64]
     var grad :  ArcPointer[Float64]
 

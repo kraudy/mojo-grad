@@ -13,7 +13,7 @@ struct Module:
     fn parameters(self) -> List[ArcPointer[Value]]:
         return List[ArcPointer[Value]]() 
 
-
+#TODO: Implement inheritance
 struct Neuron:
     """
     A set of weigths and a bias.
@@ -66,7 +66,9 @@ struct Neuron:
         self.b = Value(0)
         self.nonlin = nonlin
 
+    #TODO: Check if this ArcPointer function is needed
     fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
+        #TODO: change to 0.0
         var act = Value(0)
 
         #TODO: Consider SIMD operations
@@ -97,18 +99,18 @@ struct Neuron:
             return act
     
     fn __moveinit__(out self, owned other: Neuron):
+        #TODO: Check ^
         self.w = other.w
         self.b = other.b
         self.nonlin = other.nonlin
     
-    #TODO: Validate if this works fine or only the data should be coppied
     fn __copyinit__(out self, other: Neuron):
         self.w = other.w
         self.b = other.b
         self.nonlin = other.nonlin
     
     fn parameters(self) -> List[ArcPointer[Value]]:
-        #TODO: Check this operation
+        #TODO: Make this more Pythonic
         #return self.w + self.b
         var params = self.w
         params.append(self.b)
@@ -129,6 +131,7 @@ struct Neuron:
 
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
+#TODO: Implement inheritance
 struct Layer:
     """
     A fully connected Layer.
@@ -166,6 +169,7 @@ struct Layer:
     var neurons : List[ArcPointer[Neuron]]
     """The layer's neurons."""
 
+    #TODO: Rename this kwargs to activation
     fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
         self.neurons = List[ArcPointer[Neuron]]()
         for _ in range(nout):
@@ -188,6 +192,7 @@ struct Layer:
         return out
 
     fn __moveinit__(out self, owned other: Layer):
+        #TODO: Validate ^
         self.neurons = other.neurons
     
     fn __repr__(self) -> String:
@@ -200,6 +205,7 @@ struct Layer:
 
         return neurons_repr
 
+#TODO: Implement inheritance
 struct MLP:
     """
     Simple MLP model that implements fully connected layers.
@@ -264,6 +270,7 @@ struct MLP:
         self.layers = other.layers
 
     fn __moveinit__(out self, owned other: MLP):
+        #TODO: Validate ^
         self.layers = other.layers
     
     fn parameters(self) -> List[ArcPointer[Value]]:
