@@ -5,7 +5,7 @@ from memory import ArcPointer
 from testing import assert_almost_equal, assert_true, assert_equal
 from python import Python, PythonObject
 
-fn show_predictions(model: ArcPointer[MLP], X: PythonObject, y: PythonObject) raises:
+fn show_predictions(model: MLP, X: PythonObject, y: PythonObject) raises:
     var np = Python.import_module("numpy")
     var plt = Python.import_module("matplotlib.pyplot")
 
@@ -28,13 +28,13 @@ fn show_predictions(model: ArcPointer[MLP], X: PythonObject, y: PythonObject) ra
             row.append(Value(value))
         inputs.append(row)
 
-    var scores = List[ArcPointer[Value]]()
+    var scores = List[Value]()
     for input in inputs:
-        scores.append(model[](x = input[])[0])
+        scores.append(model(x = input[])[0])
 
     var Z = List[Bool]()
     for score in scores:
-        Z.append(score[][].data[] > 0)
+        Z.append(score[].data[] > 0)
 
     var Z_np = np.zeros(len(Z), dtype=np.bool_)
     for i in range(len(Z)):
@@ -80,7 +80,7 @@ fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]
 
 fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Value:
     """Validate the weighted output against the expected output."""
-    var losses = List[ArcPointer[Value]]()
+    var losses = List[Value]()
     print("Losses ===============")
     #svm "max-margin" loss
     for i in range(len(scores)):
@@ -99,7 +99,7 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
 
     var data_loss = Value(0)
     for loss in losses:
-        data_loss += loss[][]
+        data_loss += loss[]
         """Add since we want the model loss"""
     data_loss *= Value(1.0 / Float64(len(losses)))
     """Here we take the mean of the data loss across the sample"""
@@ -108,11 +108,11 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
     print(repr(data_loss))
 
     var alpha = 1e-4
-    var reg_loss = ArcPointer[Value](Value(0))
+    var reg_loss = (Value(0))
     for p in model.parameters():
-        reg_loss[] += (p[][] * p[][])
-    reg_loss[] *= Value(alpha)
-    var total_loss = data_loss + reg_loss[]
+        reg_loss += (p[][] * p[][])
+    reg_loss *= Value(alpha)
+    var total_loss = data_loss + reg_loss
     """L2 regularizaiton to prevent overfit"""
 
     print("Total loss")
