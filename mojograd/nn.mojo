@@ -47,12 +47,12 @@ struct Neuron:
     ----------    
 
     """
-    var w : List[ArcPointer[Value]]
-    var b : ArcPointer[Value]
+    var w : List[Value]
+    var b : Value
     var nonlin : ArcPointer[Bool]
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
-        self.w = List[ArcPointer[Value]]()
+        self.w = List[Value]()
         
         for _ in range(nin):
             """Values between -1 and 1 for weigthing."""
@@ -61,7 +61,7 @@ struct Neuron:
             bound = Float64(1 / sqrt(nin)); random_float64(-bound, bound)
             rand(foo, nin, min=-bound, max=bound)
             """
-            self.w.append(ArcPointer[Value](Value(rand)))
+            self.w.append(Value(rand))
 
         self.b = Value(0)
         self.nonlin = nonlin
@@ -73,10 +73,10 @@ struct Neuron:
 
         #TODO: Consider SIMD operations
         for i in range(len(self.w)):
-            act += (self.w[i][] * x[i][])
+            act += (self.w[i] * x[i][])
             """Scalar product."""
 
-        act += self.b[]
+        act += self.b
 
         if self.nonlin[]:
             return act.relu()
@@ -88,10 +88,10 @@ struct Neuron:
 
         #TODO: Consider SIMD operations
         for i in range(len(self.w)):
-            act += (self.w[i][] * x[i])
+            act += (self.w[i] * x[i])
             """Scalar product."""
 
-        act += self.b[]
+        act += self.b
 
         if self.nonlin[]:
             return act.relu()
@@ -109,7 +109,7 @@ struct Neuron:
         self.b = other.b
         self.nonlin = other.nonlin
     
-    fn parameters(self) -> List[ArcPointer[Value]]:
+    fn parameters(self) -> List[Value]:
         #TODO: Make this more Pythonic
         #return self.w + self.b
         var params = self.w
@@ -126,7 +126,7 @@ struct Neuron:
         if full:
             neuron_type += "["
             for i in range(len(self.w)):
-                neuron_type += ", " + repr(self.w[i][])
+                neuron_type += ", " + repr(self.w[i])
             neuron_type += "]"
 
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
