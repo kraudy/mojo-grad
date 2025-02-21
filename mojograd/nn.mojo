@@ -165,7 +165,6 @@ struct Layer:
     ----------    
 
     """
-    #TODO: Maybe this needs to be a pointer
     var neurons : List[Neuron]
     """The layer's neurons."""
 
@@ -183,8 +182,8 @@ struct Layer:
         #return out[0] if len(out) == 1 else out
         return out
     
-    fn parameters(self) -> List[ArcPointer[Value]]:
-        var out = List[ArcPointer[Value]]()
+    fn parameters(self) -> List[Value]:
+        var out = List[Value]()
         for n in self.neurons:
             for p in n[].parameters():
                 out.append(p[])
