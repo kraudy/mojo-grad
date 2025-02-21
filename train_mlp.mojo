@@ -57,7 +57,6 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[Value]]:
     This should take into account the expected input by the model."""
 
     var inputs = List[List[Value]]()
-    print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
         var row = List[Value]()
         for j in range(Int(Xb.shape[1])):
@@ -72,7 +71,6 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[Value]]:
 fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]:
     """Weigth the input against each layer."""
     var scores = List[Value]()
-    print("Scores ===============")
     for input in inputs:
         scores.append(model(x = input[])[0])
         """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
@@ -81,7 +79,6 @@ fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]
 fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Value:
     """Validate the weighted output against the expected output."""
     var losses = List[Value]()
-    print("Losses ===============")
     #svm "max-margin" loss
     for i in range(len(scores)):
         """This is the loss calculation"""
@@ -110,7 +107,7 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
     var alpha = 1e-4
     var reg_loss = (Value(0))
     for p in model.parameters():
-        reg_loss += (p[][] * p[][])
+        reg_loss += (p[] * p[])
     reg_loss *= Value(alpha)
     var total_loss = data_loss + reg_loss
     """L2 regularizaiton to prevent overfit"""
@@ -200,7 +197,7 @@ fn create_mlp_model() raises:
             # backward
             #TODO: Implement this with trait 
             for out in model.parameters():
-                out[][].grad[] = 0
+                out[].grad[] = 0
                 """Needs to be reset because the grads are added. Not zeroing
                 grads is one of the most common mistakes."""
 
@@ -209,14 +206,13 @@ fn create_mlp_model() raises:
             # update (sgd)
             var learning_rate : Float64 = 1.0 - 0.9 * k/i 
             for p in model.parameters():
-                print(repr(p[][]))
-                p[][].data[] -= learning_rate * p[][].grad[]
-                print(repr(p[][]))
+                p[].data[] -= learning_rate * p[].grad[]
                 """This is what really makes the model 'learn'
                 If the grad is positive, the neuron increaces the loss, hence we reduce it: - * + = -.
                 If the grad is negative, the neuron decreses the loss (what we want) hence increce it: - * - = +"""
             
             #if k % 1 == 0:
+            print("="*100)
             print("Step: ", k, " | loss data: ", total_loss.data[], " | loss grad: ", total_loss.grad[] , " | accuracy: ", acc*100)
 
         except e:

@@ -194,6 +194,9 @@ struct Layer:
         #TODO: Validate ^
         self.neurons = other.neurons
     
+    fn __copyinit__(out self, other: Layer):
+        self.neurons = other.neurons
+    
     fn __repr__(self) -> String:
         var neurons_repr = String("Layer of [" )
         neurons_repr += "Input (weigths) " + str(len(self.neurons[0].w)) + ' | '
@@ -243,14 +246,14 @@ struct MLP:
 
     """
     #TODO: Maybe this needs to be pointer
-    var layers : List[ArcPointer[Layer]]
+    var layers : List[Layer]
     fn __init__(out self, nin: Int, nouts: List[Int]):
         #var sz = List[Int](nin) + nouts
         var sz = List[Int]()
         sz.append(nin)
         for n in nouts:
             sz.append(n[])
-        self.layers = List[ArcPointer[Layer]]()
+        self.layers = List[Layer]()
 
         for i in range(len(nouts)):
             self.layers.append(Layer(nin = sz[i], nout = sz[i + 1], kwargs = (i != len(nouts) - 1)))
@@ -259,7 +262,7 @@ struct MLP:
 
     fn __call__(self, mut x: List[Value]) -> List[Value]:
         for layer in self.layers:
-            x = layer[][](x)
+            x = layer[](x)
         
         #return x[0] if len(x) == 1 else x
         return x
@@ -272,18 +275,18 @@ struct MLP:
         #TODO: Validate ^
         self.layers = other.layers
     
-    fn parameters(self) -> List[ArcPointer[Value]]:
-        var out = List[ArcPointer[Value]]()
+    fn parameters(self) -> List[Value]:
+        var out = List[Value]()
         for layer in self.layers:
-            for p in layer[][].parameters():
+            for p in layer[].parameters():
                 out.append(p[])
 
         return out
     
     fn __repr__(self) -> String:
-        var mlp_repr = String("MLP of [" )
+        var mlp_repr = String("MLP of [\n" )
         for i in range(len(self.layers)):
-            mlp_repr += ", " + repr(self.layers[i][])
+            mlp_repr += repr(self.layers[i]) + ",\n"
         mlp_repr += "]"
 
         return mlp_repr
