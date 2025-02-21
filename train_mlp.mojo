@@ -78,7 +78,7 @@ fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]
         """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
     return scores
 
-fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> ArcPointer[Value]:
+fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> Value:
     """Validate the weighted output against the expected output."""
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
@@ -97,26 +97,26 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
     print("After calculating losses")
     print(len(losses))
 
-    var data_loss = ArcPointer[Value](Value(0))
+    var data_loss = Value(0)
     for loss in losses:
-        data_loss[] += loss[][]
+        data_loss += loss[][]
         """Add since we want the model loss"""
-    data_loss[] *= Value(1.0 / Float64(len(losses)))
+    data_loss *= Value(1.0 / Float64(len(losses)))
     """Here we take the mean of the data loss across the sample"""
 
     print("Sum of the data loss")
-    print(repr(data_loss[]))
+    print(repr(data_loss))
 
     var alpha = 1e-4
     var reg_loss = ArcPointer[Value](Value(0))
     for p in model[].parameters():
         reg_loss[] += (p[][] * p[][])
     reg_loss[] *= Value(alpha)
-    var total_loss = ArcPointer[Value](data_loss[] + reg_loss[])
+    var total_loss = data_loss + reg_loss[]
     """L2 regularizaiton to prevent overfit"""
 
     print("Total loss")
-    print(repr(total_loss[]))
+    print(repr(total_loss))
 
     return total_loss   
 
@@ -172,11 +172,11 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     print("len scores: ", len(scores))
     print("accuracy: ", str(accuracy))
 
-    print("total loss: ", repr(total_loss[]), " | Accuracy: ", str(accuracy))
+    print("total loss: ", repr(total_loss), " | Accuracy: ", str(accuracy))
 
     np = None
 
-    return (total_loss[], accuracy)
+    return (total_loss, accuracy)
 
 fn create_mlp_model() raises:
     # initialize a model 
