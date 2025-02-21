@@ -49,7 +49,7 @@ struct Neuron:
     """
     var w : List[Value]
     var b : Value
-    var nonlin : ArcPointer[Bool]
+    var nonlin : Bool
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[Value]()
@@ -78,7 +78,7 @@ struct Neuron:
 
         act += self.b
 
-        if self.nonlin[]:
+        if self.nonlin:
             return act.relu()
         else:
             return act
@@ -93,7 +93,7 @@ struct Neuron:
 
         act += self.b
 
-        if self.nonlin[]:
+        if self.nonlin:
             return act.relu()
         else:
             return act
@@ -117,11 +117,11 @@ struct Neuron:
         return params
       
     fn __repr__(self) -> String:
-        var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
+        var neuron_type = String("ReLU" if self.nonlin else "Linear")
         return neuron_type + " Neuron( w: " + str(len(self.w)) + ")"
       
     fn __repr__(self, full: Bool = False) -> String:
-        var neuron_type = String("ReLU" if self.nonlin[] else "Linear")
+        var neuron_type = String("ReLU" if self.nonlin else "Linear")
 
         if full:
             neuron_type += "["
