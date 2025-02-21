@@ -69,16 +69,16 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[ArcPointer[Value]]]:
     return inputs
 
 #TODO: Move this to the MLP class.
-fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]]]) raises -> List[ArcPointer[Value]]:
+fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]]]) raises -> List[Value]:
     """Weigth the input against each layer."""
-    var scores = List[ArcPointer[Value]]()
+    var scores = List[Value]()
     print("Scores ===============")
     for input in inputs:
-        scores.append(model[](x = input[])[0])
+        scores.append(model[](x = input[])[0][])
         """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
     return scores
 
-fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> Value:
+fn calculate_losses(model: ArcPointer[MLP], scores: List[Value], yb:  PythonObject) raises -> Value:
     """Validate the weighted output against the expected output."""
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
@@ -91,7 +91,7 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
         #TODO: Consider using log for classification
         #TODO: maybe change Value(yi) to yi
         # Loss=max⁡(0,1−y⋅score)
-        losses.append((1 + (-Value(yi) * scorei[])).relu())
+        losses.append((1 + (-Value(yi) * scorei)).relu())
         """We want to check if the trulabel * prediction is less than 1"""
     
     print("After calculating losses")
@@ -120,13 +120,13 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[ArcPointer[Value]], yb:
 
     return total_loss   
 
-fn get_accuracy(scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> Float64:
+fn get_accuracy(scores: List[Value], yb:  PythonObject) raises -> Float64:
     var accuracy_count: Int = 0
     for i in range(len(scores)):
         #TODO: Find a better way to do this conversion
         var yi = Float64(yb.item(i).to_float64())
         var scorei = scores[i]
-        if (yi > 0) == (scorei[].data[] > 0):
+        if (yi > 0) == (scorei.data[] > 0):
             accuracy_count += 1
 
     var accuracy = Float64(accuracy_count) / Float64(len(scores))
@@ -155,24 +155,15 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
     
     var inputs = make_inputs(Xb)
     """These are the inputs to the model layers"""
-    
-    print("Passed =========================")
-    print("len input: ", len(inputs))
 
     # This is the forward
     #TODO: print scores to see prediction
     var scores = make_forward(model, inputs)
     """These are the 'outputs' of the model"""
 
-    print("Losses ===============")
     var total_loss = calculate_losses(model, scores, yb)
 
     var accuracy =  get_accuracy(scores, yb)
-
-    print("len scores: ", len(scores))
-    print("accuracy: ", str(accuracy))
-
-    print("total loss: ", repr(total_loss), " | Accuracy: ", str(accuracy))
 
     np = None
 
