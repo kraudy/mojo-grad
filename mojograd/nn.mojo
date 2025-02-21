@@ -67,13 +67,13 @@ struct Neuron:
         self.nonlin = nonlin
 
     #TODO: Check if this ArcPointer function is needed
-    fn __call__(self, x : List[ArcPointer[Value]]) -> Value:
+    fn __call__(self, x : List[Value]) -> Value:
         #TODO: change to 0.0
         var act = Value(0)
 
         #TODO: Consider SIMD operations
         for i in range(len(self.w)):
-            act += (self.w[i] * x[i][])
+            act += (self.w[i] * x[i])
             """Scalar product."""
 
         act += self.b
@@ -175,8 +175,8 @@ struct Layer:
         for _ in range(nout):
             self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
     
-    fn __call__(self, x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
-        var out = List[ArcPointer[Value]]()
+    fn __call__(self, x: List[Value]) -> List[Value]:
+        var out = List[Value]()
         for i in range(len(self.neurons)):
             out.append(self.neurons[i][](x = x))
         
@@ -258,7 +258,7 @@ struct MLP:
             """This makes the number of neurons of the current layer equals to the number of weights of each neuron
             of the next layer."""
 
-    fn __call__(self, mut x: List[ArcPointer[Value]]) -> List[ArcPointer[Value]]:
+    fn __call__(self, mut x: List[Value]) -> List[Value]:
         for layer in self.layers:
             x = layer[][](x)
         

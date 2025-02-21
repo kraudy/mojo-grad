@@ -20,12 +20,12 @@ fn show_predictions(model: ArcPointer[MLP], X: PythonObject, y: PythonObject) ra
     var xx_yy: PythonObject = np.meshgrid(xx, yy)
     var Xmesh: PythonObject = np.c_[xx_yy[0].ravel(), xx_yy[1].ravel()]
 
-    var inputs = List[List[ArcPointer[Value]]]()
+    var inputs = List[List[Value]]()
     for i in range(Int(Xmesh.shape[0])):
-        var row = List[ArcPointer[Value]]()
+        var row = List[Value]()
         for j in range(Int(Xmesh.shape[1])):
             var value = Float64(Xmesh[i, j].to_float64())
-            row.append(ArcPointer[Value](Value(value)))
+            row.append(Value(value))
         inputs.append(row)
 
     var scores = List[ArcPointer[Value]]()
@@ -52,29 +52,29 @@ fn show_predictions(model: ArcPointer[MLP], X: PythonObject, y: PythonObject) ra
 
 #TODO: Add wich data set to use
 #TODO: Move this to the MLP class, or maybe a DataLoader
-fn make_inputs(Xb: PythonObject) raises -> List[List[ArcPointer[Value]]]:
+fn make_inputs(Xb: PythonObject) raises -> List[List[Value]]:
     """Generate inputs to the model layers.
     This should take into account the expected input by the model."""
 
-    var inputs = List[List[ArcPointer[Value]]]()
+    var inputs = List[List[Value]]()
     print("Inputs ===============")
     for i in range(Int(Xb.shape[0])):
-        var row = List[ArcPointer[Value]]()
+        var row = List[Value]()
         for j in range(Int(Xb.shape[1])):
             #TODO: Find a better way to do this conversion
             var value: Float64 = Xb.item(i, j).to_float64()
-            row.append(ArcPointer[Value](Value(value)))
+            row.append(Value(value))
             """[x0, x1]"""
         inputs.append(row)
     return inputs
 
 #TODO: Move this to the MLP class.
-fn make_forward(model: ArcPointer[MLP], mut inputs:  List[List[ArcPointer[Value]]]) raises -> List[Value]:
+fn make_forward(model: ArcPointer[MLP], mut inputs: List[List[Value]]) raises -> List[Value]:
     """Weigth the input against each layer."""
     var scores = List[Value]()
     print("Scores ===============")
     for input in inputs:
-        scores.append(model[](x = input[])[0][])
+        scores.append(model[](x = input[])[0])
         """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
     return scores
 
@@ -163,7 +163,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     var total_loss = calculate_losses(model, scores, yb)
 
-    var accuracy =  get_accuracy(scores, yb)
+    var accuracy = get_accuracy(scores, yb)
 
     np = None
 
