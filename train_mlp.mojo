@@ -69,16 +69,16 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[Value]]:
     return inputs
 
 #TODO: Move this to the MLP class.
-fn make_forward(model: ArcPointer[MLP], mut inputs: List[List[Value]]) raises -> List[Value]:
+fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]:
     """Weigth the input against each layer."""
     var scores = List[Value]()
     print("Scores ===============")
     for input in inputs:
-        scores.append(model[](x = input[])[0])
+        scores.append(model(x = input[])[0])
         """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
     return scores
 
-fn calculate_losses(model: ArcPointer[MLP], scores: List[Value], yb:  PythonObject) raises -> Value:
+fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Value:
     """Validate the weighted output against the expected output."""
     var losses = List[ArcPointer[Value]]()
     print("Losses ===============")
@@ -109,7 +109,7 @@ fn calculate_losses(model: ArcPointer[MLP], scores: List[Value], yb:  PythonObje
 
     var alpha = 1e-4
     var reg_loss = ArcPointer[Value](Value(0))
-    for p in model[].parameters():
+    for p in model.parameters():
         reg_loss[] += (p[][] * p[][])
     reg_loss[] *= Value(alpha)
     var total_loss = data_loss + reg_loss[]
@@ -134,7 +134,7 @@ fn get_accuracy(scores: List[Value], yb:  PythonObject) raises -> Float64:
 
     return accuracy   
 
-fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[Value, Float64]:
+fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[Value, Float64]:
     var Xb : PythonObject
     var yb : PythonObject
 
