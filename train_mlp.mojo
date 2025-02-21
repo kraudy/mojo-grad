@@ -134,7 +134,7 @@ fn get_accuracy(scores: List[ArcPointer[Value]], yb:  PythonObject) raises -> Fl
 
     return accuracy   
 
-fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[ArcPointer[Value], Float64]:
+fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[Value, Float64]:
     var Xb : PythonObject
     var yb : PythonObject
 
@@ -176,7 +176,7 @@ fn loss(model: ArcPointer[MLP], X: PythonObject, y: PythonObject, batch_size: Py
 
     np = None
 
-    return (total_loss, accuracy)
+    return (total_loss[], accuracy)
 
 fn create_mlp_model() raises:
     # initialize a model 
@@ -201,7 +201,7 @@ fn create_mlp_model() raises:
     var i = 20
     for k in range(i):
         try:
-            var total_loss: ArcPointer[Value]
+            var total_loss: Value
             var acc: Float64
             # forward
             (total_loss, acc) = loss(model, X, y, PythonObject(None))
@@ -213,7 +213,7 @@ fn create_mlp_model() raises:
                 """Needs to be reset because the grads are added. Not zeroing
                 grads is one of the most common mistakes."""
 
-            total_loss[].backward()
+            total_loss.backward()
 
             # update (sgd)
             var learning_rate : Float64 = 1.0 - 0.9 * k/i 
@@ -226,7 +226,7 @@ fn create_mlp_model() raises:
                 If the grad is negative, the neuron decreses the loss (what we want) hence increce it: - * - = +"""
             
             #if k % 1 == 0:
-            print("Step: ", k, " | loss data: ", total_loss[].data[], " | loss grad: ", total_loss[].grad[] , " | accuracy: ", acc*100)
+            print("Step: ", k, " | loss data: ", total_loss.data[], " | loss grad: ", total_loss.grad[] , " | accuracy: ", acc*100)
 
         except e:
             print(e)
