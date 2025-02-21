@@ -166,19 +166,19 @@ struct Layer:
 
     """
     #TODO: Maybe this needs to be a pointer
-    var neurons : List[ArcPointer[Neuron]]
+    var neurons : List[Neuron]
     """The layer's neurons."""
 
     #TODO: Rename this kwargs to activation
     fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
-        self.neurons = List[ArcPointer[Neuron]]()
+        self.neurons = List[Neuron]()
         for _ in range(nout):
             self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
     
     fn __call__(self, x: List[Value]) -> List[Value]:
         var out = List[Value]()
         for i in range(len(self.neurons)):
-            out.append(self.neurons[i][](x = x))
+            out.append(self.neurons[i](x = x))
         
         #return out[0] if len(out) == 1 else out
         return out
@@ -186,7 +186,7 @@ struct Layer:
     fn parameters(self) -> List[ArcPointer[Value]]:
         var out = List[ArcPointer[Value]]()
         for n in self.neurons:
-            for p in n[][].parameters():
+            for p in n[].parameters():
                 out.append(p[])
 
         return out
@@ -197,10 +197,10 @@ struct Layer:
     
     fn __repr__(self) -> String:
         var neurons_repr = String("Layer of [" )
-        neurons_repr += "Input (weigths) " + str(len(self.neurons[0][].w)) + ' | '
+        neurons_repr += "Input (weigths) " + str(len(self.neurons[0].w)) + ' | '
         neurons_repr += ", Output (neurons): " + str(len(self.neurons)) + ' | '
         for i in range(len(self.neurons)):
-            neurons_repr += ", " + repr(self.neurons[i][])
+            neurons_repr += ", " + repr(self.neurons[i])
         neurons_repr += "]"
 
         return neurons_repr
