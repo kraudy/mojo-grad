@@ -20,7 +20,7 @@ fn main():
         print("y: ", repr(y))
         print("Neuron: ", repr(n))
         for a in n.parameters():
-            print(repr(a[][]))
+            print(repr(a[]))
 
     fn test2() raises:
         var layers = List[List[Neuron]]()
@@ -41,7 +41,7 @@ fn main():
         # Puting the layers from first to last
         var rev_layers = reversed(layers)
         # Generating the input
-        var x = List[ArcPointer[Value]]()
+        var x = List[Value]()
         for _ in range(2 ** 4):
             var rand = random_float64(-1.0, 1.0)
             x.append(Value(rand))
@@ -49,7 +49,7 @@ fn main():
         # Manually doing the forward
         #var val = List[Value]()
         for l in rev_layers:
-            var layer_out = List[ArcPointer[Value]]()
+            var layer_out = List[Value]()
             for n in l[]:
                 layer_out.append(n[](x))
             x = layer_out
@@ -57,10 +57,10 @@ fn main():
         # x should have the last output and be 1 value
         print("afeter forward")
         print(len(x))
-        print(repr(x[0][]))
-        x[0][].backward()
+        print(repr(x[0]))
+        x[0].backward()
         print("afeter backward")
-        print(repr(x[0][]))
+        print(repr(x[0]))
 
         print("Neuron repr")
         for l in rev_layers:
@@ -90,7 +90,7 @@ fn main():
         var neuron = Neuron(2)    
         # This is the input to the neuron
         # can be array of numbers i think
-        var x = List[ArcPointer[Value]](Value(2), Value(3))
+        var x = List[Value](Value(2), Value(3))
 
         #TODO: Note how X and W must have the same length. Maybe this can be changed
         var act = neuron(x)
@@ -100,49 +100,49 @@ fn main():
         print("After Backward ==============")
         print(repr(act))
         print(repr(act._prev[0][]))
-        print(repr(x[0][]))
+        print(repr(x[0]))
         print("Neuron")
         print(repr(neuron.__repr__(True)))
 
     fn test_layer() raises:
         # 2 Value inputs
-        var x = List[ArcPointer[Value]](Value(2), Value(3))
+        var x = List[Value](Value(2), Value(3))
         # Layer of 1 Neuron with 2 weigts
         var l = Layer(2, 1)
         # Forward
         var res = l(x)
         print("Before backward")
-        print(repr(res[0][]))
-        res[0][].backward()
+        print(repr(res[0]))
+        res[0].backward()
         print("After backward")
-        print(repr(res[0][]))
+        print(repr(res[0]))
         for v in x:
             print("Input grad")
-            print(repr(v[][]))
+            print(repr(v[]))
         for v in l.neurons:
             print("Layer neurons")
-            print(v[][].__repr__(True))
+            print(v[].__repr__(True))
         print("Layer")
         print(repr(l))
 
     fn test_mlp() raises:
         #var nouts = List[Int](16, 16, 1)
         var nouts = List[Int](4, 4, 1)
-        var x = List[ArcPointer[Value]](Value(2), Value(3))
+        var x = List[Value](Value(2), Value(3))
         var m = MLP(2, nouts)
         var res = m(x)
 
         print("Before backward =======================")
-        print(repr(res[0][]))
-        res[0][].backward()
+        print(repr(res[0]))
+        res[0].backward()
         print("After backward =======================")
-        print(repr(res[0][]))
+        print(repr(res[0]))
         for v in x:
             print("Input grad")
-            print(repr(v[][]))
+            print(repr(v[]))
         for v in m.layers:
             print("MLP Layers")
-            print(repr(v[][]))
+            print(repr(v[]))
         print("MLP")
         print(repr(m))
 

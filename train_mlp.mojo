@@ -82,21 +82,21 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
     var data_loss = Value(0)
     var accuracy = 0.0
     for i in range(len(scores)):
-        """This is the loss calculation"""
         #TODO: Find a better way to do this conversion
         var yi: Float64 = yb.item(i).to_float64()
         #TODO: Consider using log for classification
         data_loss += (1 - yi * scores[i]).relu()
-        """We want to check if the trulabel * prediction is less than 1"""
+        """We want to check if the trulabel * prediction is less than 1."""
         if (yi > 0) == (scores[i].data[] > 0): accuracy += 1
+        """Count accuracy."""
 
     var alpha = 1e-4
     var reg_loss = 0.0
     for p in model.parameters(): reg_loss += (p[].data[] ** 2)
-    """L2 regularizaiton to prevent overfit"""
+    """L2 regularization to prevent overfit"""
 
     return ((data_loss / len(scores)) + (reg_loss * alpha), (accuracy / len(scores)))
-    """(Mean of the data loss + L2 regularizacion, Mean of the accuracy)"""
+    """(Mean of the data loss + L2 regularization, Mean of the accuracy)"""
 
 fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[Value, Float64]:
     var Xb : PythonObject
