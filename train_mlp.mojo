@@ -88,32 +88,25 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
         #TODO: Consider using log for classification
         losses.append((1 - yi * scorei).relu())
         """We want to check if the trulabel * prediction is less than 1"""
-    
-    print("After calculating losses")
-    print(len(losses))
 
     var data_loss = Value(0)
     for loss in losses:
         data_loss += loss[]
         """Add since we want the model loss"""
-    data_loss *= Value(1.0 / Float64(len(losses)))
+    data_loss *= (1.0 / Float64(len(losses)))
     """Here we take the mean of the data loss across the sample"""
 
-    print("Sum of the data loss")
-    print(repr(data_loss))
-
     var alpha = 1e-4
-    var reg_loss = (Value(0))
+    var reg_loss = 0.0 #(Value(0))
     for p in model.parameters():
-        reg_loss += (p[] * p[])
-    reg_loss *= Value(alpha)
-    var total_loss = data_loss + reg_loss
+        #reg_loss += (p[] ** 2)
+        reg_loss += (p[].data[] ** 2)
+    reg_loss *= alpha
+
+    #var total_loss = data_loss + reg_loss
     """L2 regularizaiton to prevent overfit"""
 
-    print("Total loss")
-    print(repr(total_loss))
-
-    return total_loss   
+    return (data_loss + reg_loss)   
 
 fn get_accuracy(scores: List[Value], yb:  PythonObject) raises -> Float64:
     var accuracy_count: Int = 0
@@ -125,7 +118,6 @@ fn get_accuracy(scores: List[Value], yb:  PythonObject) raises -> Float64:
             accuracy_count += 1
 
     var accuracy = Float64(accuracy_count) / Float64(len(scores))
-    print("accuracy_count: ", accuracy_count)
 
     return accuracy   
 
@@ -141,7 +133,6 @@ fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject =
         Xb = X
         yb = y
     else:
-        print("no es none")
         var total_samples = Float64(X.shape[0])
         var batch_size_int = batch_size
         var indices = np.random.choice(total_samples, batch_size_int, replace=False)
@@ -151,8 +142,6 @@ fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject =
     var inputs = make_inputs(Xb)
     """These are the inputs to the model layers"""
 
-    # This is the forward
-    #TODO: print scores to see prediction
     var scores = make_forward(model, inputs)
     """These are the 'outputs' of the model"""
 
@@ -189,19 +178,21 @@ fn create_mlp_model() raises:
         try:
             var total_loss: Value
             var acc: Float64
-            # forward
+            print("Forward pass")
             (total_loss, acc) = loss(model, X, y, PythonObject(None))
 
-            # backward
+            print("Zeroing grads")
             #TODO: Implement this with trait 
             for out in model.parameters():
                 out[].grad[] = 0
                 """Needs to be reset because the grads are added. Not zeroing
                 grads is one of the most common mistakes."""
 
+            print("Doing backward")
             total_loss.backward()
 
             # update (sgd)
+            print("Updating weigths")
             var learning_rate : Float64 = 1.0 - 0.9 * k/i 
             for p in model.parameters():
                 p[].data[] -= learning_rate * p[].grad[]
@@ -210,8 +201,8 @@ fn create_mlp_model() raises:
                 If the grad is negative, the neuron decreses the loss (what we want) hence increce it: - * - = +"""
             
             #if k % 1 == 0:
-            print("="*100)
             print("Step: ", k, " | loss data: ", total_loss.data[], " | loss grad: ", total_loss.grad[] , " | accuracy: ", acc*100)
+            print("="*100)
 
         except e:
             print(e)
