@@ -67,25 +67,16 @@ fn make_inputs(Xb: PythonObject) raises -> List[List[Value]]:
         inputs.append(row)
     return inputs
 
-#TODO: Move this to the MLP class.
-fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]:
-    """Weigth the input against each layer."""
+fn make_forward(model: MLP, mut inputs: List[List[Value]], yb: PythonObject) raises -> Tuple[Value, Float64]:
     var scores = List[Value]()
-    for input in inputs:
-        scores.append(model(x = input[])[0])
-        """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
-    return scores
-
-fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Tuple[Value, Float64]:
-    """Validate the weighted output against the expected output."""
-    #svm "max-margin" loss
     var data_loss = Value(0)
     var accuracy = 0.0
-    for i in range(len(scores)):
+    for i in range(len(inputs)):
+        scores.append(model(x = inputs[i])[0])
         #TODO: Find a better way to do this conversion
         var yi: Float64 = yb.item(i).to_float64()
         #TODO: Consider using log for classification
-        data_loss += (1 - yi * scores[i]).relu()
+        data_loss += (1 - yi * scores[i]).relu() #svm "max-margin" loss
         """We want to check if the trulabel * prediction is less than 1."""
         if (yi > 0) == (scores[i].data[] > 0): accuracy += 1
         """Count accuracy."""
@@ -119,10 +110,7 @@ fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject =
     var inputs = make_inputs(Xb)
     """These are the inputs to the model layers"""
 
-    var scores = make_forward(model, inputs)
-    """These are the 'outputs' of the model"""
-
-    return calculate_losses(model, scores, yb)
+    return make_forward(model, inputs, yb)
 
 fn create_mlp_model() raises:
     # initialize a model 
