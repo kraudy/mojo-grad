@@ -76,10 +76,11 @@ fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]
         """Here, each output of the model is a 1 element list since the last layer activation is 1 neuron."""
     return scores
 
-fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Value:
+fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Tuple[Value, Float64]:
     """Validate the weighted output against the expected output."""
     #svm "max-margin" loss
     var data_loss = Value(0)
+    var accuracy = 0.0
     for i in range(len(scores)):
         """This is the loss calculation"""
         #TODO: Find a better way to do this conversion
@@ -87,9 +88,12 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
         #TODO: Consider using log for classification
         data_loss += (1 - yi * scores[i]).relu()
         """We want to check if the trulabel * prediction is less than 1"""
+        if (yi > 0) == (scores[i].data[] > 0):
+            accuracy += 1
 
     data_loss *= (1.0 / Float64(len(scores)))
     """Here we take the mean of the data loss across the sample"""
+    accuracy = (accuracy / Float64(len(scores)))
 
     var alpha = 1e-4
     var reg_loss = 0.0
@@ -98,20 +102,7 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
     reg_loss *= alpha
     """L2 regularizaiton to prevent overfit"""
 
-    return (data_loss + reg_loss)   
-
-fn get_accuracy(scores: List[Value], yb:  PythonObject) raises -> Float64:
-    var accuracy_count: Int = 0
-    for i in range(len(scores)):
-        #TODO: Find a better way to do this conversion
-        var yi = Float64(yb.item(i).to_float64())
-        var scorei = scores[i]
-        if (yi > 0) == (scorei.data[] > 0):
-            accuracy_count += 1
-
-    var accuracy = Float64(accuracy_count) / Float64(len(scores))
-
-    return accuracy   
+    return (data_loss + reg_loss, accuracy)   
 
 fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject = PythonObject(None)) raises -> Tuple[Value, Float64]:
     var Xb : PythonObject
@@ -119,8 +110,6 @@ fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject =
 
     var np = Python.import_module("numpy")
 
-    #TODO: Move this to its own function
-    #TODO: Validate this logic
     if batch_size is None:
         Xb = X
         yb = y
@@ -131,19 +120,15 @@ fn loss(model: MLP, X: PythonObject, y: PythonObject, batch_size: PythonObject =
         Xb = np.take(X, indices, axis=0)
         yb = np.take(y, indices, axis=0)
     
+    np = None
+
     var inputs = make_inputs(Xb)
     """These are the inputs to the model layers"""
 
     var scores = make_forward(model, inputs)
     """These are the 'outputs' of the model"""
 
-    var total_loss = calculate_losses(model, scores, yb)
-
-    var accuracy = get_accuracy(scores, yb)
-
-    np = None
-
-    return (total_loss, accuracy)
+    return calculate_losses(model, scores, yb)
 
 fn create_mlp_model() raises:
     # initialize a model 
