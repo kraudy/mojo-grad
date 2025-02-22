@@ -78,32 +78,24 @@ fn make_forward(model: MLP, mut inputs: List[List[Value]]) raises -> List[Value]
 
 fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -> Value:
     """Validate the weighted output against the expected output."""
-    var losses = List[Value]()
     #svm "max-margin" loss
+    var data_loss = Value(0)
     for i in range(len(scores)):
         """This is the loss calculation"""
         #TODO: Find a better way to do this conversion
         var yi: Float64 = yb.item(i).to_float64()
-        var scorei = scores[i]
         #TODO: Consider using log for classification
-        losses.append((1 - yi * scorei).relu())
+        data_loss += (1 - yi * scores[i]).relu()
         """We want to check if the trulabel * prediction is less than 1"""
 
-    var data_loss = Value(0)
-    for loss in losses:
-        data_loss += loss[]
-        """Add since we want the model loss"""
-    data_loss *= (1.0 / Float64(len(losses)))
+    data_loss *= (1.0 / Float64(len(scores)))
     """Here we take the mean of the data loss across the sample"""
 
     var alpha = 1e-4
-    var reg_loss = 0.0 #(Value(0))
+    var reg_loss = 0.0
     for p in model.parameters():
-        #reg_loss += (p[] ** 2)
         reg_loss += (p[].data[] ** 2)
     reg_loss *= alpha
-
-    #var total_loss = data_loss + reg_loss
     """L2 regularizaiton to prevent overfit"""
 
     return (data_loss + reg_loss)   
