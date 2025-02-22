@@ -119,17 +119,12 @@ fn create_mlp_model() raises:
     print("number of parameters", len(model.parameters()))
 
     var sklearn = Python.import_module("sklearn.datasets")
-    var np = Python.import_module("numpy")
-    var plt = Python.import_module("matplotlib.pyplot")
 
     # Generate the dataset
     var make_moons = sklearn.make_moons
     var result: PythonObject = make_moons(n_samples=100, noise=0.1)
     var X: PythonObject = result[0]
-    var y: PythonObject = result[1]
-
-    # Adjust y to be -1 or 1
-    y = y * 2 - 1
+    var y: PythonObject = result[1] * 2 - 1 
   
     #for k in range(100):
     var i = 20
@@ -142,10 +137,8 @@ fn create_mlp_model() raises:
 
             print("Zeroing grads")
             #TODO: Implement this with trait 
-            for out in model.parameters():
-                out[].grad[] = 0
-                """Needs to be reset because the grads are added. Not zeroing
-                grads is one of the most common mistakes."""
+            for out in model.parameters():out[].grad[] = 0
+            """Not zeroing grads is one of the most common mistakes."""
 
             print("Doing backward")
             total_loss.backward()
@@ -153,11 +146,8 @@ fn create_mlp_model() raises:
             # update (sgd)
             print("Updating weigths")
             var learning_rate : Float64 = 1.0 - 0.9 * k/i 
-            for p in model.parameters():
-                p[].data[] -= learning_rate * p[].grad[]
-                """This is what really makes the model 'learn'
-                If the grad is positive, the neuron increaces the loss, hence we reduce it: - * + = -.
-                If the grad is negative, the neuron decreses the loss (what we want) hence increce it: - * - = +"""
+            for p in model.parameters(): p[].data[] -= learning_rate * p[].grad[]
+            """If the grad is positive, reduce the neuron influence, if negative increase it."""
             
             #if k % 1 == 0:
             print("Step: ", k, " | loss data: ", total_loss.data[], " | loss grad: ", total_loss.grad[] , " | accuracy: ", acc*100)
@@ -172,9 +162,6 @@ fn create_mlp_model() raises:
     X = PythonObject(None)
     y = PythonObject(None)
     sklearn = PythonObject(None)
-    np = PythonObject(None)
-    plt = PythonObject(None)
-
 
 
 fn main():   
