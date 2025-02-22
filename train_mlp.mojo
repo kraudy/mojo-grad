@@ -86,9 +86,7 @@ fn calculate_losses(model: MLP, scores: List[Value], yb:  PythonObject) raises -
         var yi: Float64 = yb.item(i).to_float64()
         var scorei = scores[i]
         #TODO: Consider using log for classification
-        #TODO: maybe change Value(yi) to yi
-        # Loss=max⁡(0,1−y⋅score)
-        losses.append((1 + (-Value(yi) * scorei)).relu())
+        losses.append((1 - yi * scorei).relu())
         """We want to check if the trulabel * prediction is less than 1"""
     
     print("After calculating losses")
