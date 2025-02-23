@@ -185,10 +185,10 @@ struct Value():
         var out = Value(data = (Float64(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
         return out
 
-    fn build_topo(self, mut visited: List[Int], mut topo: List[Value]):
+    fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
         if self.id in visited: return
 
-        visited.append(self.id)
+        visited.add(self.id)
 
         if self._op == "": return
         """
@@ -229,7 +229,7 @@ struct Value():
 
     fn backward(mut self):
         #TODO: Optimize this, maybe with a stack.
-        var visited = List[Int](List[Int]())
+        var visited = Set[Int](Set[Int]())
         var topo = List[Value](List[Value]())
 
         self.build_topo(visited, topo)

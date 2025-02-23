@@ -127,7 +127,7 @@ fn create_mlp_model() raises:
     var y: PythonObject = result[1] * 2 - 1 
   
     #for k in range(100):
-    var i = 20
+    var i = 100
     for k in range(i):
         try:
             var total_loss: Value
