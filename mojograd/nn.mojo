@@ -66,7 +66,6 @@ struct Neuron:
         self.b = Value(0)
         self.nonlin = nonlin
 
-    #TODO: Check if this ArcPointer function is needed
     fn __call__(self, x : List[Value]) -> Value:
         #TODO: change to 0.0
         var act = Value(0)
@@ -99,9 +98,8 @@ struct Neuron:
             return act
     
     fn __moveinit__(out self, owned other: Neuron):
-        #TODO: Check ^
-        self.w = other.w
-        self.b = other.b
+        self.w = other.w^
+        self.b = other.b^
         self.nonlin = other.nonlin
     
     fn __copyinit__(out self, other: Neuron):
@@ -191,8 +189,7 @@ struct Layer:
         return out
 
     fn __moveinit__(out self, owned other: Layer):
-        #TODO: Validate ^
-        self.neurons = other.neurons
+        self.neurons = other.neurons^
     
     fn __copyinit__(out self, other: Layer):
         self.neurons = other.neurons
@@ -272,8 +269,7 @@ struct MLP:
         self.layers = other.layers
 
     fn __moveinit__(out self, owned other: MLP):
-        #TODO: Validate ^
-        self.layers = other.layers
+        self.layers = other.layers^
     
     fn parameters(self) -> List[Value]:
         var out = List[Value]()

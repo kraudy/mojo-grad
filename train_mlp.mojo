@@ -132,26 +132,22 @@ fn create_mlp_model() raises:
         try:
             var total_loss: Value
             var acc: Float64
-            print("Forward pass")
             (total_loss, acc) = loss(model, X, y, PythonObject(None))
 
-            print("Zeroing grads")
             #TODO: Implement this with trait 
             for out in model.parameters():out[].grad[] = 0
             """Not zeroing grads is one of the most common mistakes."""
 
-            print("Doing backward")
             total_loss.backward()
 
             # update (sgd)
-            print("Updating weigths")
             var learning_rate : Float64 = 1.0 - 0.9 * k/i 
             for p in model.parameters(): p[].data[] -= learning_rate * p[].grad[]
             """If the grad is positive, reduce the neuron influence, if negative increase it."""
             
-            #if k % 1 == 0:
-            print("Step: ", k, " | loss data: ", total_loss.data[], " | loss grad: ", total_loss.grad[] , " | accuracy: ", acc*100)
-            print("="*100)
+            if k % 10 == 0:
+              print("Step: ", k, " | loss data: ", total_loss.data[], " | accuracy: ", acc*100)
+              print("="*100)
 
         except e:
             print(e)
