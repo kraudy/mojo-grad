@@ -171,7 +171,6 @@ struct Value():
         return out
 
     fn build_topo(self, mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
-
         #TODO: Optimize this. Currently O(n), could be O(1)
         for vis in visited:
             if self == vis[][]:
@@ -194,13 +193,7 @@ struct Value():
         topo.append(self)
         """Nodes ordered from last non-leaf (first layer) to output (usually loss)."""
 
-    fn backward(mut self):
-        #TODO: Optimize this, maybe with a stack.
-        var visited = List[ArcPointer[Value]](List[ArcPointer[Value]]())
-        var topo = List[ArcPointer[Value]](List[ArcPointer[Value]]())
-
-        self.build_topo(visited, topo)
-
+    fn back_prop(self, topo: List[ArcPointer[Value]]):
         self.grad[] = 1.0
         """If the first node's grad is 0, the chain rule will affect badly all previous nodes."""
 
@@ -222,6 +215,15 @@ struct Value():
             if v[][]._op == "ReLu":
                 v[][].backward_relu()
                 continue
+
+    fn backward(mut self):
+        #TODO: Optimize this, maybe with a stack.
+        var visited = List[ArcPointer[Value]](List[ArcPointer[Value]]())
+        var topo = List[ArcPointer[Value]](List[ArcPointer[Value]]())
+
+        self.build_topo(visited, topo)
+
+        self.back_prop(topo)
     
     fn __repr__(self) -> String:
         return "data: " + str(self.data[]) + " | grad: " + str(self.grad[]) + " | Op: " + self._op
