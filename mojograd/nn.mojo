@@ -16,19 +16,20 @@ struct Module:
 #TODO: Implement inheritance
 struct Neuron:
     """
-    A set of weigths and a bias.
+    Transforms the linear representation of concept 'a' into concept 'c'
+    a dot W + bias = c.
     
     Input
     ----------
-    A list of linear concepts (Values).
+    A linear concept representation(Values).
 
     Returns
     ----------
-    A transformed linear concept (Value).
+    A transformed linear concept representation(Value).
 
     """
     var w : List[Value]
-    """Linear representation of a concept."""
+    """Distributed representation of concepts."""
     var b : Value
     """Neuron's 'happyness'."""
     var nonlin : Bool
@@ -44,36 +45,24 @@ struct Neuron:
         self.nonlin = nonlin
 
     fn __call__(self, x : List[Value]) -> Value:
-        """Relation making operation: dot product between linear representations of concepts."""
-        #TODO: change to 0.0
+        """Relation making operation: dot product between the linear representation of a concept and
+        the ditributed representation learned by the Neuron."""
         var act = Value(0)
-
         #TODO: Consider SIMD operations
-        for i in range(len(self.w)):
-            act += (self.w[i] * x[i])
-            """Scalar product."""
+        for i in range(len(self.w)): act += (self.w[i] * x[i])
+        """Scalar product."""
 
-        act += self.b
-
-        if self.nonlin:
-            return act.relu()
-        else:
-            return act
+        if self.nonlin: return (act + self.b).relu()
+        return (act + self.b)
 
     fn __call__(self, x : List[Float64]) -> Value:
         var act = Value(0)
-
         #TODO: Consider SIMD operations
-        for i in range(len(self.w)):
-            act += (self.w[i] * x[i])
-            """Scalar product."""
+        for i in range(len(self.w)): act += (self.w[i] * x[i])
+        """Scalar product."""
 
-        act += self.b
-
-        if self.nonlin:
-            return act.relu()
-        else:
-            return act
+        if self.nonlin: return (act + self.b).relu()
+        return (act + self.b)
     
     fn __moveinit__(out self, owned other: Neuron):
         self.w = other.w^
@@ -86,23 +75,17 @@ struct Neuron:
         self.nonlin = other.nonlin
     
     fn parameters(self) -> List[Value]:
-        #TODO: Make this more Pythonic
-        #return self.w + self.b
-        var params = self.w
-        params.append(self.b)
-        return params
+        return self.w + List[Value](self.b)
       
     fn __repr__(self) -> String:
-        var neuron_type = String("ReLU" if self.nonlin else "Linear")
-        return neuron_type + " Neuron( w: " + str(len(self.w)) + ")"
+        return String("ReLU" if self.nonlin else "Linear") + " Neuron( w: " + str(len(self.w)) + ")"
       
     fn __repr__(self, full: Bool = False) -> String:
         var neuron_type = String("ReLU" if self.nonlin else "Linear")
 
         if full:
             neuron_type += "["
-            for i in range(len(self.w)):
-                neuron_type += ", " + repr(self.w[i])
+            for i in range(len(self.w)): neuron_type += ", " + repr(self.w[i])
             neuron_type += "]"
 
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
@@ -111,57 +94,36 @@ struct Neuron:
 struct Layer:
     """
     A fully connected Layer.
+
+    Transforms a set of linear representation of concepts into a new vector space of related concepts.
+    [(a dot W) + bias for W,bias in Nuerons.W, Nuerons.bias]
     
     Input
     ----------
-    A list of Values.
+    A vector space of linear concepts representations(Values).
 
     Returns
     ----------
-    A list of weigthed Values.
-    Note to self: A Layer has no weigths since is mostly an abstraction to interact with 
-    many neurons in a uniform manner, the neuron itself has the weights.
-
-    Parameters
-    ----------
-    nin:  
-      Number of weigths per neuron or how many values will this layer receive.
-    nout: 
-      Number of neurons per layer or how many values will this layer output.
-    nonlin: 
-      If relu is applied to the output of every neuron.
-    x:
-      Input data.
-
-    Activation
-    ----------
-    The input data is weigthed through all the layer's neurons.
-
-    Examples
-    ----------    
-
+    A transformed new vector space of linear concepts representations(Value). 
     """
     var neurons : List[Neuron]
     """The layer's neurons."""
 
     fn __init__(out self, nin: Int, nout: Int, nonlin: Bool = True):
         self.neurons = List[Neuron]()
-        for _ in range(nout):
-            self.neurons.append(Neuron(nin = nin, nonlin = nonlin))
+        for _ in range(nout): self.neurons.append(Neuron(nin = nin, nonlin = nonlin))
     
     fn __call__(self, x: List[Value]) -> List[Value]:
+        """Transforms a vector space of linear representations into a new vector space of related 
+        linear representations."""
         var out = List[Value]()
-        for i in range(len(self.neurons)):
-            out.append(self.neurons[i](x = x))
-        
+        for i in range(len(self.neurons)): out.append(self.neurons[i](x = x))
         return out
     
     fn parameters(self) -> List[Value]:
         var out = List[Value]()
         for n in self.neurons:
-            for p in n[].parameters():
-                out.append(p[])
-
+            for p in n[].parameters(): out.append(p[])
         return out
 
     fn __moveinit__(out self, owned other: Layer):
@@ -185,25 +147,16 @@ struct MLP:
     """
     Simple MLP model that implements fully connected layers.
     
+    Transforms a set of linear representation of concepts into a new vector space of related concepts.
+    [(a dot W) + bias for W,bias in Nuerons.W, Nuerons.bias]
+    
     Input
     ----------
-    A list of Values.
+    A vector space of linear concepts representations(Values).
 
     Returns
     ----------
-    A list of scores.
-
-    Parameters
-    ----------
-    nin:  
-      Number of weigths per neuron of the first layer or how many values will be passed 
-      initially to the model.
-    nouts: 
-      Number of neurons per layer or how many values will each layer output.
-    nonlin: 
-      If relu is applied to the output of every neuron.
-    x:
-      Input data.
+    A transformed new vector space of linear concepts representations(Value). 
 
     Activation
     ----------
