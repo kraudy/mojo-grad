@@ -20,53 +20,31 @@ struct Neuron:
     
     Input
     ----------
-    A list of Values.
+    A list of linear concepts (Values).
 
     Returns
     ----------
-    A weigthed Value.
-
-    Parameters
-    ----------
-    nin:  
-      Number of weigths of the neuron or how many values expects to receive.
-    nonlin: 
-      If non-linearity is applied to the neuron's activation.
-    x:
-      Input data.
-      len(x) should be == len(w). Otherwise would require zero padding.
-
-    Activation
-    ----------
-    The input data is weigthed (multiplied) against the neuron's and then sumed up (scalar product) to 
-    get the neuron's influence on the data.
-    len(a) == len(b)
-    a . b = sum(a[i]*b[i]) for in range(len(a))
-
-    Examples
-    ----------    
+    A transformed linear concept (Value).
 
     """
     var w : List[Value]
+    """Linear representation of a concept."""
     var b : Value
+    """Neuron's 'happyness'."""
     var nonlin : Bool
+    """Non linear transformation."""
 
     fn __init__(out self, nin: Int, nonlin: Bool = True):
         self.w = List[Value]()
         
-        for _ in range(nin):
-            """Values between -1 and 1 for weigthing."""
-            var rand = random_float64(-1.0, 1.0)
-            """This gives better convergence than these
-            bound = Float64(1 / sqrt(nin)); random_float64(-bound, bound)
-            rand(foo, nin, min=-bound, max=bound)
-            """
-            self.w.append(Value(rand))
-
+        for _ in range(nin): self.w.append(Value(random_float64(-1.0, 1.0)))
+        """Values between -1 and 1 for weigthing."""
+            
         self.b = Value(0)
         self.nonlin = nonlin
 
     fn __call__(self, x : List[Value]) -> Value:
+        """Relation making operation: dot product between linear representations of concepts."""
         #TODO: change to 0.0
         var act = Value(0)
 
@@ -150,7 +128,7 @@ struct Layer:
       Number of weigths per neuron or how many values will this layer receive.
     nout: 
       Number of neurons per layer or how many values will this layer output.
-    kwargs: 
+    nonlin: 
       If relu is applied to the output of every neuron.
     x:
       Input data.
@@ -166,18 +144,16 @@ struct Layer:
     var neurons : List[Neuron]
     """The layer's neurons."""
 
-    #TODO: Rename this kwargs to activation
-    fn __init__(out self, nin: Int, nout: Int, kwargs: Bool = True):
+    fn __init__(out self, nin: Int, nout: Int, nonlin: Bool = True):
         self.neurons = List[Neuron]()
         for _ in range(nout):
-            self.neurons.append(Neuron(nin = nin, nonlin = kwargs))
+            self.neurons.append(Neuron(nin = nin, nonlin = nonlin))
     
     fn __call__(self, x: List[Value]) -> List[Value]:
         var out = List[Value]()
         for i in range(len(self.neurons)):
             out.append(self.neurons[i](x = x))
         
-        #return out[0] if len(out) == 1 else out
         return out
     
     fn parameters(self) -> List[Value]:
@@ -224,7 +200,7 @@ struct MLP:
       initially to the model.
     nouts: 
       Number of neurons per layer or how many values will each layer output.
-    kwargs: 
+    nonlin: 
       If relu is applied to the output of every neuron.
     x:
       Input data.
@@ -242,18 +218,13 @@ struct MLP:
     model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network and 1 layer-output
 
     """
-    #TODO: Maybe this needs to be pointer
     var layers : List[Layer]
     fn __init__(out self, nin: Int, nouts: List[Int]):
-        #var sz = List[Int](nin) + nouts
-        var sz = List[Int]()
-        sz.append(nin)
-        for n in nouts:
-            sz.append(n[])
+        var sz = List[Int](nin) + nouts
         self.layers = List[Layer]()
 
         for i in range(len(nouts)):
-            self.layers.append(Layer(nin = sz[i], nout = sz[i + 1], kwargs = (i != len(nouts) - 1)))
+            self.layers.append(Layer(nin = sz[i], nout = sz[i + 1], nonlin = (i < len(nouts) - 1)))
             """This makes the number of neurons of the current layer equals to the number of weights of each neuron
             of the next layer."""
 
@@ -261,7 +232,6 @@ struct MLP:
         for layer in self.layers:
             x = layer[](x)
         
-        #return x[0] if len(x) == 1 else x
         return x
         """The output can be a List of one value or multiple. This deppends on the last layer output"""
 
