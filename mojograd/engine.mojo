@@ -5,7 +5,16 @@
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 
+# Global counter for unique IDs
+var global_id_counter: Int = 0
+
+fn get_next_id() -> Int:
+    global_id_counter += 1
+    return global_id_counter
+
 struct Value():
+    var id: Int  # Unique sequential ID
+
     #TODO: Validate if this ArcPointer is needed
     var data: ArcPointer[Float64]
     var grad :  ArcPointer[Float64]
@@ -21,6 +30,7 @@ struct Value():
 
     @always_inline
     fn __init__(out self, data: Float64):
+        self.id = get_next_id()
         self.data = data
         self.grad =  0.0
 
@@ -30,6 +40,7 @@ struct Value():
         self._op = String('') 
 
     fn __init__(out self, data: Float64, prev1: Value, op: String):
+        self.id = get_next_id()
         self.data = data
         self.grad = 0.0
 
@@ -41,6 +52,7 @@ struct Value():
         self._op = op
 
     fn __init__(out self, data: Float64, prev1: Value, prev2: Value, op: String):
+        self.id = get_next_id()
         self.data = data
         self.grad = 0.0
 
@@ -53,6 +65,7 @@ struct Value():
         self._op = op
 
     fn __moveinit__(out self, owned existing: Self):
+        self.id = existing.id
         self.data = existing.data^
         self.grad = existing.grad^
         # Validate
@@ -61,6 +74,7 @@ struct Value():
         self._op = existing._op^
     
     fn __copyinit__(out self, existing: Self):
+        self.id = existing.id
         self.data = existing.data
         self.grad = existing.grad
         self._func = existing._func
@@ -141,9 +155,10 @@ struct Value():
         var out = self * other
         self = out
     
-    @always_inline
-    fn __eq__(self, other: Self) -> Bool:
-        return self.data.__is__(other.data) 
+    #@always_inline
+    #fn __eq__(self, other: Self) -> Bool:
+    #    return self.data.__is__(other.data) 
+        #return UnsafePointer.address_of(self) == UnsafePointer.address_of(other)
 
     @always_inline
     fn backward_pow(mut self):
@@ -170,13 +185,10 @@ struct Value():
         var out = Value(data = (Float64(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
         return out
 
-    fn build_topo(self, mut visited: List[Value], mut topo: List[Value]):
-        #TODO: Optimize this. Currently O(n), could be O(1)
-        for vis in visited:
-            if self == vis[]:
-                return
+    fn build_topo(self, mut visited: List[Int], mut topo: List[Value]):
+        if self.id in visited: return
 
-        visited.append(self)
+        visited.append(self.id)
 
         if self._op == "": return
         """
@@ -217,7 +229,7 @@ struct Value():
 
     fn backward(mut self):
         #TODO: Optimize this, maybe with a stack.
-        var visited = List[Value](List[Value]())
+        var visited = List[Int](List[Int]())
         var topo = List[Value](List[Value]())
 
         self.build_topo(visited, topo)
