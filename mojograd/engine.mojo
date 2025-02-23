@@ -170,10 +170,10 @@ struct Value():
         var out = Value(data = (Float64(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
         return out
 
-    fn build_topo(self, mut visited: List[ArcPointer[Value]], mut topo: List[ArcPointer[Value]]):
+    fn build_topo(self, mut visited: List[Value], mut topo: List[Value]):
         #TODO: Optimize this. Currently O(n), could be O(1)
         for vis in visited:
-            if self == vis[][]:
+            if self == vis[]:
                 return
 
         visited.append(self)
@@ -193,7 +193,7 @@ struct Value():
         topo.append(self)
         """Nodes ordered from last non-leaf (first layer) to output (usually loss)."""
 
-    fn back_prop(self, topo: List[ArcPointer[Value]]):
+    fn back_prop(self, mut topo: List[Value]):
         self.grad[] = 1.0
         """If the first node's grad is 0, the chain rule will affect badly all previous nodes."""
 
@@ -202,24 +202,23 @@ struct Value():
             This reversed give us the order: 
             From output node (loss) to last non-leaf node (usually first layer's neurons).
             """
-            # Note the double [] needed, the first for the iterator and the second for the pointer
-            if v[][]._op == "+":
-                v[][].backward_add()
+            if v[]._op == "+":
+                v[].backward_add()
                 continue
-            if v[][]._op == "*":
-                v[][].backward_mul()
+            if v[]._op == "*":
+                v[].backward_mul()
                 continue
-            if v[][]._op == "**":
-                v[][].backward_pow()
+            if v[]._op == "**":
+                v[].backward_pow()
                 continue
-            if v[][]._op == "ReLu":
-                v[][].backward_relu()
+            if v[]._op == "ReLu":
+                v[].backward_relu()
                 continue
 
     fn backward(mut self):
         #TODO: Optimize this, maybe with a stack.
-        var visited = List[ArcPointer[Value]](List[ArcPointer[Value]]())
-        var topo = List[ArcPointer[Value]](List[ArcPointer[Value]]())
+        var visited = List[Value](List[Value]())
+        var topo = List[Value](List[Value]())
 
         self.build_topo(visited, topo)
 
