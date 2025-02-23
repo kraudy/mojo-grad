@@ -104,7 +104,7 @@ struct Layer:
 
     Returns
     ----------
-    A transformed new vector space of linear concepts representations(Value). 
+    A transformed new vector space of related linear concepts representations(Value). 
     """
     var neurons : List[Neuron]
     """The layer's neurons."""
@@ -147,8 +147,8 @@ struct MLP:
     """
     Simple MLP model that implements fully connected layers.
     
-    Transforms a set of linear representation of concepts into a new vector space of related concepts.
-    [(a dot W) + bias for W,bias in Nuerons.W, Nuerons.bias]
+    Once the model has 'learn', the network becomes a distributed representation of concepts with
+    their relations or a probability distribution. 
     
     Input
     ----------
@@ -156,20 +156,7 @@ struct MLP:
 
     Returns
     ----------
-    A transformed new vector space of linear concepts representations(Value). 
-
-    Activation
-    ----------
-    The input data is weigthed through all the layer's neurons and the output
-    is passed through the next layers.
-
-    Examples
-    ----------    
-    A model the expect an input of x1, x2.
-    Layer 1: Input 2, Output 16
-    Layer 2: Input 16, Output 1
-    model = MLP(2, List[Int](16, 16, 1)) # 2-layer neural network and 1 layer-output
-
+    A transformed new vector space of related linear concepts representations(Value). 
     """
     var layers : List[Layer]
     fn __init__(out self, nin: Int, nouts: List[Int]):
