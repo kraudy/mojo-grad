@@ -19,8 +19,8 @@ struct Value():
     var data: ArcPointer[Float64]
     var grad :  ArcPointer[Float64]
 
-    #TODO: Check if this scope function can be now implemented
-    var _func  : fn (
+    #Following momograd implementation
+    var _backward  : fn (
         prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
     ) -> None
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
@@ -42,7 +42,7 @@ struct Value():
         self.data = data
         self.grad =  0.0
 
-        self._func  = Value.no_backprop
+        self._backward  = Value.no_backprop
         self._prev = List[ArcPointer[Value]]()
 
         self._op = String('') 
@@ -52,7 +52,7 @@ struct Value():
         self.data = data
         self.grad = 0.0
 
-        self._func  = Value.no_backprop
+        self._backward  = Value.no_backprop
 
         self._prev = List[ArcPointer[Value]]()
         self._prev.append(ArcPointer[Value](prev1))
@@ -64,7 +64,7 @@ struct Value():
         self.data = data
         self.grad = 0.0
 
-        self._func  = Value.no_backprop
+        self._backward  = Value.no_backprop
 
         self._prev = List[ArcPointer[Value]]()
         self._prev.append(ArcPointer[Value](prev1))
@@ -77,7 +77,7 @@ struct Value():
         self.data = existing.data^
         self.grad = existing.grad^
         # Validate
-        self._func = existing._func#^
+        self._backward = existing._backward#^
         self._prev = existing._prev^
         self._op = existing._op^
     
@@ -85,7 +85,7 @@ struct Value():
         self.id = existing.id
         self.data = existing.data
         self.grad = existing.grad
-        self._func = existing._func
+        self._backward = existing._backward
         self._prev = existing._prev
         self._op = existing._op
       
@@ -97,6 +97,13 @@ struct Value():
     @always_inline
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] + other.data[]), prev1 = self, prev2 = other, op = '+')
+        fn _backward(
+            prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
+        ) -> None:
+            prev[0][].grad[] += grad[]
+            prev[1][].grad[] += grad[]
+
+        out._backward = _backward
         return out
 
     fn __add__(self, other: Float64) -> Value:
@@ -223,7 +230,8 @@ struct Value():
             From output node (loss) to last non-leaf node (usually first layer's neurons).
             """
             if v[]._op == "+":
-                v[].backward_add()
+                #v[].backward_add()
+                v[]._backward(v[]._prev, v[].grad, v[].data)
                 continue
             if v[]._op == "*":
                 v[].backward_mul()
