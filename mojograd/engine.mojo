@@ -19,10 +19,7 @@ struct Value():
     var data: ArcPointer[Float64]
     var grad :  ArcPointer[Float64]
 
-    #Following momograd implementation
-    var _backward  : fn (
-        prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
-    ) -> None
+    var _backward  : fn (v: ArcPointer[Value]) -> None
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
     # var _prev :  Set[Value]
     #TODO: There has to be a better way to do this.
@@ -31,10 +28,7 @@ struct Value():
     var _op : String
 
     @staticmethod
-    fn no_backprop(
-        prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
-    ) -> None:
-        pass
+    fn no_backprop(v: ArcPointer[Value]) -> None: pass
 
     @always_inline
     fn __init__(out self, data: Float64):
@@ -89,19 +83,19 @@ struct Value():
         self._prev = existing._prev
         self._op = existing._op
       
-    @always_inline
-    fn backward_add(mut self):
-        self._prev[0][].grad[] += self.grad[]
-        self._prev[1][].grad[] += self.grad[]
+    #@always_inline
+    #fn backward_add(mut self):
+    #    self._prev[0][].grad[] += self.grad[]
+    #    self._prev[1][].grad[] += self.grad[]
 
     @always_inline
     fn __add__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] + other.data[]), prev1 = self, prev2 = other, op = '+')
         fn _backward(
-            prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
+            v: ArcPointer[Value]
         ) -> None:
-            prev[0][].grad[] += grad[]
-            prev[1][].grad[] += grad[]
+            v[]._prev[0][].grad[] += v[].grad[]
+            v[]._prev[1][].grad[] += v[].grad[]
 
         out._backward = _backward
         return out
@@ -144,14 +138,22 @@ struct Value():
     fn __rtruediv__(self, other: Float64) -> Value:
         return other * (self ** -1)
     
-    @always_inline
-    fn backward_mul(mut self):
-        self._prev[0][].grad[] += self._prev[1][].data[] * self.grad[]
-        self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
+    #@always_inline
+    #fn backward_mul(mut self):
+    #    self._prev[0][].grad[] += self._prev[1][].data[] * self.grad[]
+    #    self._prev[1][].grad[] += self._prev[0][].data[] * self.grad[]
 
     @always_inline
     fn __mul__(self, other: Value) -> Value:
         var out = Value(data = (self.data[] * other.data[]), prev1 = self, prev2 = other, op = '*')
+        fn _backward(
+            v: ArcPointer[Value]
+        ) -> None:
+            v[]._prev[0][].grad[] += v[]._prev[1][].data[] * v[].grad[]
+            v[]._prev[1][].grad[] += v[]._prev[0][].data[] * v[].grad[]
+
+        out._backward = _backward
+
         return out
 
     fn __mul__(self, other: Float64) -> Value:
@@ -175,29 +177,44 @@ struct Value():
     #    return self.data.__is__(other.data) 
         #return UnsafePointer.address_of(self) == UnsafePointer.address_of(other)
 
-    @always_inline
-    fn backward_pow(mut self):
-        self._prev[0][].grad[] += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad[]
+    #@always_inline
+    #fn backward_pow(mut self):
+    #    self._prev[0][].grad[] += (self._prev[1][].data[] * self._prev[0][].data[] ** (self._prev[1][].data[] - 1)) * self.grad[]
 
     @always_inline
     fn __pow__(self, other : Value) -> Value:
         var out = Value(data = (self.data[] ** other.data[]), prev1 = self, prev2 = other, op = '**')
+        fn _backward(
+            v: ArcPointer[Value]
+        ) -> None:
+            v[]._prev[0][].grad[] += (v[]._prev[1][].data[] * v[]._prev[0][].data[] ** (v[]._prev[1][].data[] - 1)) * v[].grad[]
+
+        out._backward = _backward
         return out
     
     fn __pow__(self, other: Float64) -> Value:
         var v = Value(other)
         return self ** v
 
-    @always_inline
-    fn backward_relu(mut self):
-        if self.data[] > 0:
-            self._prev[0][].grad[] += self.grad[]
-        else:
-            self._prev[0][].grad[] += 0
+    #@always_inline
+    #fn backward_relu(mut self):
+    #    if self.data[] > 0:
+    #        self._prev[0][].grad[] += self.grad[]
+    #    else:
+    #        self._prev[0][].grad[] += 0
 
 
     fn relu(self) -> Value:
         var out = Value(data = (Float64(0) if self.data[] < 0 else self.data[]), prev1 = self, op = 'ReLu')
+        fn _backward(
+            v: ArcPointer[Value]
+        ) -> None:
+            if v[].data[] > 0:
+              v[]._prev[0][].grad[] += v[].grad[]
+            else:
+              v[]._prev[0][].grad[] += 0
+
+        out._backward = _backward
         return out
 
     fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
@@ -230,17 +247,19 @@ struct Value():
             From output node (loss) to last non-leaf node (usually first layer's neurons).
             """
             if v[]._op == "+":
-                #v[].backward_add()
-                v[]._backward(v[]._prev, v[].grad, v[].data)
+                v[]._backward(v[])
                 continue
             if v[]._op == "*":
-                v[].backward_mul()
+                #v[].backward_mul()
+                v[]._backward(v[])
                 continue
             if v[]._op == "**":
-                v[].backward_pow()
+                #v[].backward_pow()
+                v[]._backward(v[])
                 continue
             if v[]._op == "ReLu":
-                v[].backward_relu()
+                #v[].backward_relu()
+                v[]._backward(v[])
                 continue
 
     fn backward(mut self):
