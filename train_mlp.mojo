@@ -119,6 +119,7 @@ fn create_mlp_model() raises:
     print("number of parameters", len(model.parameters()))
 
     var sklearn = Python.import_module("sklearn.datasets")
+    var time = Python.import_module("time")
 
     # Generate the dataset
     var make_moons = sklearn.make_moons
@@ -126,7 +127,7 @@ fn create_mlp_model() raises:
     var X: PythonObject = result[0]
     var y: PythonObject = result[1] * 2 - 1 
   
-    #for k in range(100):
+    start = time.time()
     var i = 100
     for k in range(i):
         try:
@@ -152,6 +153,9 @@ fn create_mlp_model() raises:
         except e:
             print(e)
 
+    end = time.time()
+    print("Time: ", (end - start)*1000)
+    
     show_predictions(model, X, y)
     
     make_moons = PythonObject(None)
