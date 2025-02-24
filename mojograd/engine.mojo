@@ -20,7 +20,9 @@ struct Value():
     var grad :  ArcPointer[Float64]
 
     #TODO: Check if this scope function can be now implemented
-    var _func  : UnsafePointer[fn() escaping -> None, alignment=1]
+    var _func  : fn (
+        prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
+    ) -> None
     # Validate UnsafePointer[Tuple[UnsafePointer[Value], UnsafePointer[Value]]]
     # var _prev :  Set[Value]
     #TODO: There has to be a better way to do this.
@@ -28,13 +30,19 @@ struct Value():
 
     var _op : String
 
+    @staticmethod
+    fn no_backprop(
+        prev: List[ArcPointer[Value]], grad: ArcPointer[Float64], data: ArcPointer[Float64]
+    ) -> None:
+        pass
+
     @always_inline
     fn __init__(out self, data: Float64):
         self.id = get_next_id()
         self.data = data
         self.grad =  0.0
 
-        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+        self._func  = Value.no_backprop
         self._prev = List[ArcPointer[Value]]()
 
         self._op = String('') 
@@ -44,7 +52,7 @@ struct Value():
         self.data = data
         self.grad = 0.0
 
-        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+        self._func  = Value.no_backprop
 
         self._prev = List[ArcPointer[Value]]()
         self._prev.append(ArcPointer[Value](prev1))
@@ -56,7 +64,7 @@ struct Value():
         self.data = data
         self.grad = 0.0
 
-        self._func  = UnsafePointer[fn() escaping -> None, alignment=1]() 
+        self._func  = Value.no_backprop
 
         self._prev = List[ArcPointer[Value]]()
         self._prev.append(ArcPointer[Value](prev1))
