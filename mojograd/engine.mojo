@@ -102,11 +102,11 @@ struct Value():
     fn __neg__(self) -> Value:
         return self * (-1)
 
-    fn __iadd__ (inout self, other: Value):
+    fn __iadd__ (mut self, other: Value):
         var out = self + other
         self = out
         
-    fn __iadd__ (inout self, other: Float64):
+    fn __iadd__ (mut self, other: Float64):
         var out = self + other
         self = out
     
@@ -147,11 +147,11 @@ struct Value():
         # When multiply, the order is indifferent
         return self * other
 
-    fn __imul__ (inout self, other: Value):
+    fn __imul__ (mut self, other: Value):
         var out = self * other
         self = out
         
-    fn __imul__ (inout self, other: Float64):
+    fn __imul__ (mut self, other: Float64):
         var out = self * other
         self = out
 
