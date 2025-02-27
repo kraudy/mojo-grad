@@ -209,11 +209,11 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
     # This one gives error
     #inner_circ_y.free()
 #
-    #var y = Tensor[DType.float64](n_samples)
-    #for i in range(n_samples_out):
-    #    y[i] = 0.0
-    #for i in range(n_samples_in):
-    #    y[n_samples_out + i] = 1.0
+    var y = Tensor[DType.float64](n_samples)
+    for i in range(n_samples_out):
+        y[i] = 0.0
+    for i in range(n_samples_in):
+        y[n_samples_out + i] = 1.0
 
     #if shuffle_data:
     #    var indices = Tensor[DType.int64](n_samples)
@@ -240,6 +240,6 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
     #    X = X_with_noise
 
     #var X = Tensor[DType.float64](n_samples, 2)
-    print("y creation")
-    var y = Tensor[DType.float64](n_samples)
+    print("end of function")
+    #var y = Tensor[DType.float64](n_samples)
     return (X, y)
