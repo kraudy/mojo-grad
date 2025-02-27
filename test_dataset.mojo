@@ -36,7 +36,8 @@ fn test_make_moons() raises:
     var X: Tensor[DType.float64]
     var y: Tensor[DType.float64]
     #TODO: 3 gives error
-    (X, y) = make_moons(4, False, 0.0, 42)  # shuffle=False, noise=0.0, random_seed=0
+    #(X, y) = make_moons(4, False, 0.0, 42)  # shuffle=False, noise=0.0, random_seed=0
+    (X, y) = make_moons(10, False, 0.0, 42)  # shuffle=False, noise=0.0, random_seed=0
 
     for i in range(4):
         var center_x: Float64 = 0.0
