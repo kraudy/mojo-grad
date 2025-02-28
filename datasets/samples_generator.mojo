@@ -19,13 +19,10 @@ fn my_shuffle(mut arr: Tensor[DType.int64]):
     var n = arr.dim(0)
     for i in range(n - 1, 0, -1):
         var j = random_si64(0, i + 1)
-        #var temp = arr[i]
         var temp = arr[i]  # Direct indexing for getting values
         arr[Index(i)] = arr[Index(j)]    # Direct assignment for setting values
         arr[Index(j)] = temp
 
-#TODO: Fix for n = 3 nan error
-#fn linspace(start: Float64, stop: Float64, num: Int) -> Tensor[DType.float64]:
 fn linspace(n: Int, residue: Int, start: Float64, stop: Float64) -> UnsafePointer[Scalar[type]]:
     # Allocate memory for result
     var result = UnsafePointer[Scalar[type]].alloc(n)
@@ -59,17 +56,6 @@ fn normal(scale: Float64, size: Tuple[Int, Int]) -> Tensor[DType.float64]:
         for j in range(size[1]):
             result[Index(i, j)] = random_float64() * scale
     return result
-
-#fn apply_cos[n: Int](t: UnsafePointer[Scalar[type]]) -> UnsafePointer[Scalar[type]]:
-#    var retorna = SIMD[type, n]()
-#    for i in range(n):
-#        retorna[i] = t[i]
-#
-#    var result = UnsafePointer[Scalar[type]](t.dim(0))
-#    #for i in range(t.dim(0)):
-#    for i in range(0, n, nelts):
-#        result[i] = cos(t[i])
-#    return result
 
 fn apply_cos(n: Int, residue: Int, t: UnsafePointer[Scalar[type]]) -> UnsafePointer[Scalar[type]]:
     # Allocate new memory for the result
@@ -215,31 +201,28 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
     for i in range(n_samples_in):
         y[n_samples_out + i] = 1.0
 
-    #if shuffle_data:
-    #    var indices = Tensor[DType.int64](n_samples)
-    #    for i in range(n_samples):
-    #        indices[i] = i
-    #    #var indices = my_shuffle(range(n_samples))
-    #    my_shuffle(indices)
-    #    var X_shuffled = Tensor[DType.float64](n_samples, 2)
-    #    var y_shuffled = Tensor[DType.float64](n_samples)
-    #    for i in range(n_samples):
-    #        #X_shuffled[i, 0] = X[indices[i], 0]
-    #        X_shuffled[Index(i, 0)] = X[Index(indices[i], 0)]
-    #        X_shuffled[Index(i, 1)] = X[Index(indices[i], 1)]
-    #        y_shuffled[i] = y[Index(indices[i])]
-    #    X = X_shuffled
-    #    y = y_shuffled
+    if shuffle_data:
+        var indices = Tensor[DType.int64](n_samples)
+        for i in range(n_samples):
+            indices[i] = i
+        #var indices = my_shuffle(range(n_samples))
+        my_shuffle(indices)
+        var X_shuffled = Tensor[DType.float64](n_samples, 2)
+        var y_shuffled = Tensor[DType.float64](n_samples)
+        for i in range(n_samples):
+            #X_shuffled[i, 0] = X[indices[i], 0]
+            X_shuffled[Index(i, 0)] = X[Index(indices[i], 0)]
+            X_shuffled[Index(i, 1)] = X[Index(indices[i], 1)]
+            y_shuffled[i] = y[Index(indices[i])]
+        X = X_shuffled
+        y = y_shuffled
 
-    #if noise > 0.0:
-    #    var noise_tensor = normal(noise, (n_samples, 2))
-    #    var X_with_noise = Tensor[DType.float64](n_samples, 2)
-    #    for i in range(n_samples):
-    #        for j in range(2):
-    #            X_with_noise[Index(i, j)] = X[Index(i, j)] + noise_tensor[Index(i, j)]
-    #    X = X_with_noise
+    if noise > 0.0:
+        var noise_tensor = normal(noise, (n_samples, 2))
+        var X_with_noise = Tensor[DType.float64](n_samples, 2)
+        for i in range(n_samples):
+            for j in range(2):
+                X_with_noise[Index(i, j)] = X[Index(i, j)] + noise_tensor[Index(i, j)]
+        X = X_with_noise
 
-    #var X = Tensor[DType.float64](n_samples, 2)
-    print("end of function")
-    #var y = Tensor[DType.float64](n_samples)
     return (X, y)

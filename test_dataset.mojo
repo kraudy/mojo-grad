@@ -82,13 +82,30 @@ fn test_make_moons_minimum_size() raises:
         assert_almost_equal(dist_sqr, 1.0, atol=1e-6, msg="Point is not on expected unit circle")
     print("Minimum n size test completed.")
 
+fn test_make_moons_minimum_size_shuffle() raises:
+    var X: Tensor[type]
+    var y: Tensor[type]
+    #TODO: 3 gives nan error
+    (X, y) = make_moons(4, True, 0.0, 42)  # shuffle=True, noise=0.0, random_seed=0
+
+    for i in range(4):
+        var center_x: Float64 = 0.0
+        var center_y: Float64 = 0.0
+        if y[i] == 1.0:
+            center_x = 1.0
+            center_y = 0.5        
+        var dist_sqr = pow(X[i, 0] - center_x, 2) + pow(X[i, 1] - center_y, 2)
+        assert_almost_equal(dist_sqr, 1.0, atol=1e-6, msg="Point is not on expected unit circle")
+    print("Minimum n size test completed.")
+
 
 fn main():
     try:
-        show_moons()
-        #test_make_moons_mod_vector()
-        #test_make_moons_no_mod_vector()
-        #test_make_moons_minimum_size()
+        #show_moons()
+        test_make_moons_mod_vector()
+        test_make_moons_no_mod_vector()
+        test_make_moons_minimum_size()
+        #test_make_moons_minimum_size_shuffle()
     except e:
         print(e)
     
