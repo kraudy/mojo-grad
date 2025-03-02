@@ -16,8 +16,9 @@ struct Module:
 #TODO: Implement inheritance
 struct Neuron:
     """
+    A column or a row(when transpossed) of the matrix that represents the Layer.
     Transforms the linear representation of concept 'a' into concept 'c'
-    a dot W + bias = c.
+    ((a * w).sum + bias).activation() = c.
     
     Input
     ----------
@@ -93,10 +94,13 @@ struct Neuron:
 #TODO: Implement inheritance
 struct Layer:
     """
-    A fully connected Layer.
+    A Layer is basically a matrix of size (n,m) where n is the size of the input vector and m the number of neurons
+    of the Layer.
+    This matrix can also be viewed as a representing a linear transformation. The bias adds a translation and the activation
+    affect the output vector space.
 
     Transforms a set of linear representation of concepts into a new vector space of related concepts.
-    [(a dot W) + bias for W,bias in Nuerons.W, Nuerons.bias]
+    ((a @ W) + bias).activation()
     
     Input
     ----------
