@@ -49,7 +49,6 @@ fn test_make_moons_mod_vector() raises:
             center_y = 0.5
         var dist_sqr = pow(X[i, 0] - center_x, 2) + pow(X[i, 1] - center_y, 2)
         assert_almost_equal(dist_sqr, 1.0, atol=1e-6, msg="Point is not on expected unit circle")
-    print("Vector mod test completed.")
 
 fn test_make_moons_no_mod_vector() raises:
     var X: Tensor[type]

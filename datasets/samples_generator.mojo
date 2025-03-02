@@ -97,7 +97,6 @@ fn apply_sin(n: Int, residue: Int, t: UnsafePointer[Scalar[type]]) -> UnsafePoin
         # Store the results
         result.offset(i).store(sin_values)
 
-    #t.free()
     if residue != 0:
         for i in range(residue):
             result[(n - residue) + i] = sin(t[(n - residue) + i])
@@ -106,11 +105,6 @@ fn apply_sin(n: Int, residue: Int, t: UnsafePointer[Scalar[type]]) -> UnsafePoin
 
 fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 0.0, random_seed: Int = 0) -> Tuple[Tensor[DType.float64], Tensor[DType.float64]]:
     seed(random_seed)
-
-    
-    #var n = n_samples
-    # Validate chunck
-    #if residuo != 0: n  += residuo
 
     var n_samples_out = n_samples // 2
     var residue_out = n_samples_out % nelts
@@ -201,21 +195,21 @@ fn make_moons(n_samples: Int = 100, shuffle_data: Bool = True, noise: Float64 = 
     for i in range(n_samples_in):
         y[n_samples_out + i] = 1.0
 
-    if shuffle_data:
-        var indices = Tensor[DType.int64](n_samples)
-        for i in range(n_samples):
-            indices[i] = i
-        #var indices = my_shuffle(range(n_samples))
-        my_shuffle(indices)
-        var X_shuffled = Tensor[DType.float64](n_samples, 2)
-        var y_shuffled = Tensor[DType.float64](n_samples)
-        for i in range(n_samples):
-            #X_shuffled[i, 0] = X[indices[i], 0]
-            X_shuffled[Index(i, 0)] = X[Index(indices[i], 0)]
-            X_shuffled[Index(i, 1)] = X[Index(indices[i], 1)]
-            y_shuffled[i] = y[Index(indices[i])]
-        X = X_shuffled
-        y = y_shuffled
+    #if shuffle_data:
+    #    var indices = Tensor[DType.int64](n_samples)
+    #    for i in range(n_samples):
+    #        indices[i] = i
+    #    #var indices = my_shuffle(range(n_samples))
+    #    my_shuffle(indices)
+    #    var X_shuffled = Tensor[DType.float64](n_samples, 2)
+    #    var y_shuffled = Tensor[DType.float64](n_samples)
+    #    for i in range(n_samples):
+    #        #X_shuffled[i, 0] = X[indices[i], 0]
+    #        X_shuffled[Index(i, 0)] = X[Index(indices[i], 0)]
+    #        X_shuffled[Index(i, 1)] = X[Index(indices[i], 1)]
+    #        y_shuffled[i] = y[Index(indices[i])]
+    #    X = X_shuffled
+    #    y = y_shuffled
 
     if noise > 0.0:
         var noise_tensor = normal(noise, (n_samples, 2))
