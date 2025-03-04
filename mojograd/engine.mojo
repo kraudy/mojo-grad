@@ -126,6 +126,14 @@ struct Value():
     fn __truediv__(self, other: Float64) -> Value:
         return self * (other ** -1)
 
+    fn __itruediv__(mut self, other: Value):
+        var out = self * (other ** -1)
+        self = out
+
+    fn __itruediv__(mut self, other: Float64):
+        var out = self * (other ** -1)
+        self = out
+
     fn __rtruediv__(self, other: Float64) -> Value:
         return other * (self ** -1)
 
@@ -186,8 +194,19 @@ struct Value():
         out._backward = _backward
         return out
 
-    fn soft_max(self) -> None:#Value:
-        pass
+    @staticmethod
+    fn soft_max(inputs: List[Value]) -> List[Value]:
+        """Converts inputs to logits and normalize them to get a probability distribution."""
+        var suma = 0.0
+        var exp_values = List[Value]()
+        for i in range(len(inputs)):
+            exp_values.append(inputs[i].exp())
+            suma += exp_values[i].data[]
+
+        for i in range(len(inputs)):
+            exp_values[i] /= suma
+
+        return exp_values
 
     fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
         if self.id in visited: return
