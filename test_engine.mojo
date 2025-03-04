@@ -66,10 +66,23 @@ fn main():
         y.backward()
         assert_equal(x.grad[], 46.0, "x grad should be 46.0")
 
+    fn exp_check() raises:
+        var a = Value(data = 1.1167)
+        var b = -1.3990
+        var c = a * b
+        assert_almost_equal(c.data[], -1.5622, atol=1e-4, msg="c data should be -1.5622")
+
+        var logits = c.exp()
+        assert_almost_equal(logits.data[], 0.2097, atol=1e-4, msg="logits  data should be 0.2097")
+
+        logits.backward()
+        assert_almost_equal(a.grad[], -0.2933, atol=1e-4, msg="a grad should be -0.2933")
+
     try:
         old_mojograd_test()
         micrograd_test()
         karpathy_sanitiy_check()
+        exp_check()
         print("All good!")
     except e:
         print(e)

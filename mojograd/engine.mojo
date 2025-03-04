@@ -181,7 +181,7 @@ struct Value():
         var out = Value(data = exp(self.data[]), prev1 = self, op = 'exp')
         fn _backward(v: ArcPointer[Value]) -> None:
             # Derivative of exp(x) is exp(x)
-            v[]._prev[0][].grad[] += v[].data[] * v[].grad[]
+            v[]._prev[0][].grad[] += v[].data[] * v[].grad[] 
             
         out._backward = _backward
         return out
