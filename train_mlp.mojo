@@ -1,6 +1,7 @@
 from mojograd.engine import Value 
 from mojograd.nn import Neuron, MLP, Layer
 from memory import ArcPointer
+from math import exp
 
 from testing import assert_almost_equal, assert_true, assert_equal
 from python import Python, PythonObject

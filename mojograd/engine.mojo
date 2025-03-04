@@ -4,6 +4,7 @@
 
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
+from math import exp
 
 # Global counter for unique IDs
 var global_id_counter: Int = 0
@@ -175,6 +176,18 @@ struct Value():
 
         out._backward = _backward
         return out
+    
+    fn exp(self) -> Value:
+        var out = Value(data = exp(self.data[]), prev1 = self, op = 'exp')
+        fn _backward(v: ArcPointer[Value]) -> None:
+            # Derivative of exp(x) is exp(x)
+            v[]._prev[0][].grad[] += v[].data[] * v[].grad[]
+            
+        out._backward = _backward
+        return out
+
+    fn soft_max(self) -> None:#Value:
+        pass
 
     fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
         if self.id in visited: return
