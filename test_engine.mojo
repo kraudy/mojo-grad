@@ -78,11 +78,20 @@ fn main():
         logits.backward()
         assert_almost_equal(a.grad[], -0.2933, atol=1e-4, msg="a grad should be -0.2933")
 
+    fn probs_check() raises:
+        var inputs = List[Value](Value(1.1167), Value(-1.3990), Value(-0.0501))
+        var outpus = Value.soft_max(inputs)
+
+        assert_almost_equal(outpus[0].data[], 0.7183, atol=1e-4, msg="outpus[0] data should be 0.7183")
+        assert_almost_equal(outpus[1].data[], 0.0580, atol=1e-4, msg="outpus[1] data should be 0.0580")
+        assert_almost_equal(outpus[2].data[], 0.2237, atol=1e-4, msg="outpus[2] data should be 0.2237")
+
     try:
         old_mojograd_test()
         micrograd_test()
         karpathy_sanitiy_check()
         exp_check()
+        probs_check()
         print("All good!")
     except e:
         print(e)

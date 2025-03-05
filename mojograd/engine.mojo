@@ -199,6 +199,7 @@ struct Value():
         """Converts inputs to logits and normalize them to get a probability distribution."""
         var suma = 0.0
         var exp_values = List[Value]()
+        #TODO: Consider finding max and substracting it from every value
         for i in range(len(inputs)):
             exp_values.append(inputs[i].exp())
             suma += exp_values[i].data[]
