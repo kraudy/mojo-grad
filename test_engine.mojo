@@ -86,7 +86,16 @@ fn main():
         assert_almost_equal(outpus[1].data[], 0.0580, atol=1e-4, msg="outpus[1] data should be 0.0580")
         assert_almost_equal(outpus[2].data[], 0.2237, atol=1e-4, msg="outpus[2] data should be 0.2237")
 
+    fn loss_check() raises:
+        var inputs = List[Value](Value(-1.1719), Value(0.3234), Value(1.4956))
+        var probs = Value.soft_max(inputs)
+        var loss = -probs[0].log() # Consider adding regularization
+        print(loss.data[])
+        assert_almost_equal(loss.data[], 2.9889, atol=1e-4, msg="loss data should be 2.9889")
 
+        loss.backward()
+        for v in inputs:
+            print(v[].grad[])
 
     try:
         old_mojograd_test()
@@ -94,7 +103,7 @@ fn main():
         karpathy_sanitiy_check()
         exp_check()
         probs_check()
-        #loss_check()
+        loss_check()
         print("All good!")
     except e:
         print(e)
