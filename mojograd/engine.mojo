@@ -4,7 +4,7 @@
 
 from collections import Optional, List, Dict, InlineList, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
-from math import exp
+from math import exp, log, log2
 
 # Global counter for unique IDs
 var global_id_counter: Int = 0
@@ -191,6 +191,16 @@ struct Value():
             # Derivative of exp(x) is exp(x)
             v[]._prev[0][].grad[] += v[].data[] * v[].grad[] 
             
+        out._backward = _backward
+        return out
+    
+    fn log(self) -> Value:
+        var out = Value(data = log(self.data[]), prev1 = self, op = 'log')
+        #var out = Value(data = log2(self.data[]), prev1 = self, op = 'log')
+        fn _backward(v: ArcPointer[Value]) -> None:
+            # Derivative of log(x) is 1/x
+            v[]._prev[0][].grad[] += (1.0 / v[]._prev[0][].data[]) * v[].grad[]
+        
         out._backward = _backward
         return out
 
