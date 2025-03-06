@@ -207,20 +207,17 @@ struct Value():
     @staticmethod
     fn soft_max(inputs: List[Value]) -> List[Value]:
         """Converts inputs to logits and normalize them to get a probability distribution."""
-        #var suma = 0.0
         var suma = Value(data=0.0)
         var exp_values = List[Value]()
         #TODO: Consider finding max and substracting it from every value
         for i in range(len(inputs)):
             exp_values.append(inputs[i].exp())
-            suma += exp_values[i]#.data[]
+            suma += exp_values[i]
 
-        var exp_values_out = List[Value]()
         for i in range(len(inputs)):
-            #exp_values_out.append(exp_values[i] / suma)
             exp_values[i] /= suma
 
-        return exp_values#exp_values_out
+        return exp_values
 
     fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
         if self.id in visited: return
