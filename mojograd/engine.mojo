@@ -217,9 +217,10 @@ struct Value():
 
         var exp_values_out = List[Value]()
         for i in range(len(inputs)):
-            exp_values_out.append(exp_values[i] / suma)
+            #exp_values_out.append(exp_values[i] / suma)
+            exp_values[i] /= suma
 
-        return exp_values_out
+        return exp_values#exp_values_out
 
     fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
         if self.id in visited: return

@@ -80,26 +80,25 @@ fn main():
 
     fn probs_check() raises:
         var inputs = List[Value](Value(1.1167), Value(-1.3990), Value(-0.0501))
-        var outpus = Value.soft_max(inputs)
+        var probs = Value.soft_max(inputs)
 
-        assert_almost_equal(outpus[0].data[], 0.7183, atol=1e-4, msg="outpus[0] data should be 0.7183")
-        assert_almost_equal(outpus[1].data[], 0.0580, atol=1e-4, msg="outpus[1] data should be 0.0580")
-        assert_almost_equal(outpus[2].data[], 0.2237, atol=1e-4, msg="outpus[2] data should be 0.2237")
+        assert_almost_equal(probs[0].data[], 0.7183, atol=1e-4, msg="probs[0] data should be 0.7183")
+        assert_almost_equal(probs[1].data[], 0.0580, atol=1e-4, msg="probs[1] data should be 0.0580")
+        assert_almost_equal(probs[2].data[], 0.2237, atol=1e-4, msg="probs[2] data should be 0.2237")
 
     fn loss_check() raises:
         var inputs = List[Value](Value(-1.1719), Value(0.3234), Value(1.4956))
         var probs = Value.soft_max(inputs)
-        for i in range(3):
-            print("Probs: ", probs[i].data[])
-        var loss = -probs[0].log() # Consider adding regularization
         
-        print(loss.data[])
+        var loss = -probs[0].log() #TODO: Add regularization test
+        
         assert_almost_equal(loss.data[], 2.9889, atol=1e-4, msg="loss data should be 2.9889")
 
         loss.backward()
-        for v in inputs:
-            print(v[].grad[])
-
+        assert_almost_equal(inputs[0].grad[], -0.9497, atol=1e-4, msg="inputs[0] data should be -0.9497")
+        assert_almost_equal(inputs[1].grad[], 0.2246, atol=1e-4,  msg="inputs[1] data should be 0.2246")
+        assert_almost_equal(inputs[2].grad[], 0.7251, atol=1e-4,  msg="inputs[2] data should be 0.7251")
+        
     try:
         old_mojograd_test()
         micrograd_test()
