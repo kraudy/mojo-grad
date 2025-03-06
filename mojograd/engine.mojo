@@ -218,6 +218,17 @@ struct Value():
             exp_values[i] /= suma
 
         return exp_values
+    
+    @staticmethod
+    fn one_hot(label: Int, num_classes: Int) -> List[Value]:
+      """Convert a class label into a one-hot encoded List[Value]."""
+      var result = List[Value]()
+      for i in range(num_classes):
+          if i == label:
+              result.append(Value(1.0))
+          else:
+              result.append(Value(0.0))
+      return result
 
     fn build_topo(self, mut visited: Set[Int], mut topo: List[Value]):
         if self.id in visited: return
