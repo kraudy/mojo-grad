@@ -46,21 +46,23 @@ fn make_inputs(words: List[String], stoi: Dict[String, Int]) raises -> Tuple[Lis
 
 fn train_make_more() raises:
     var words = read_words()
-    var stoi = char_to_int(words_to_chars(words))
-
-    var layer = Layer(27, 27, nonlin=False)
-    """This is the same as a 27x27 matrix"""
 
     var xs = List[Int]()
     var ys = List[Int]()
-    (xs, ys) = make_inputs(words, stoi)
+    (xs, ys) = make_inputs(words, char_to_int(words_to_chars(words)))
     print("xs: ", len(xs))
     print("ys: ", len(ys))
-    #for x in xs:
-    #    print(x[], end=" ")
-    #for y in ys:
-    #    print(y[], end=" ")
 
+
+    var x_hot = Value.one_hot(xs, 27) 
+    var y_hot = Value.one_hot(ys, 27) 
+    print("x_hot: ", len(x_hot))
+    print("y_hot: ", len(y_hot))
+    for i in range(len(x_hot[0])):
+      print(x_hot[0][i].data[])
+
+    var layer = Layer(27, 27, nonlin=False)
+    """This is the same as a 27x27 matrix"""
 
 fn main():   
     try:
