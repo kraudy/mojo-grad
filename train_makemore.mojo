@@ -4,8 +4,7 @@ from pathlib import Path
 from collections import Set, Dict
 
 fn read_words() raises -> List[String]:
-  var words = Path("./datasets/names.txt").read_text().split("\n")
-  return words
+  return Path("./datasets/names.txt").read_text().split("\n")
 
 fn words_to_chars(words: List[String]) raises -> List[String]:
   var char_set = Set[String]()
@@ -47,11 +46,7 @@ fn make_inputs(words: List[String], stoi: Dict[String, Int]) raises -> Tuple[Lis
 
 fn train_make_more() raises:
     var words = read_words()
-    var chars = words_to_chars(words)
-    var stoi = char_to_int(chars)
-    for char in chars:
-        print(char[]," ", stoi[char[]], end=" ")
-    print('.'," ", stoi['.'], end=" ")
+    var stoi = char_to_int(words_to_chars(words))
 
     var layer = Layer(27, 27, nonlin=False)
     """This is the same as a 27x27 matrix"""
