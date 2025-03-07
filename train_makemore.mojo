@@ -1,7 +1,7 @@
 from mojograd.engine import Value 
 from mojograd.nn import Neuron, MLP, Layer
 from pathlib import Path
-from collections import Set
+from collections import Set, Dict
 
 fn read_words() raises -> List[String]:
   var words = Path("./datasets/names.txt").read_text().split("\n")
@@ -19,13 +19,17 @@ fn read_words() raises -> List[String]:
 
   return chars
 
+fn char_to_int(chars: List[String]) -> Dict[String, Int]:
+    var stoi = Dict[String, Int]()
+    for i in range(len(chars)):
+        stoi[chars[i]] = i + 1
+    return stoi
 
 fn train_make_more() raises:
-    # initialize a model 
     var chars = read_words()
-    print("Sorted unique characters:")
+    var stoi = char_to_int(chars)
     for char in chars:
-        print(char[], end=" ")
+        print(char[]," ", stoi[char[]], end=" ")
 
 fn main():   
     try:
