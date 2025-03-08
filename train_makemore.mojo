@@ -55,9 +55,7 @@ fn train_make_more() raises:
 
 
     var x_hot = Value.one_hot(xs, 27) 
-    var y_hot = Value.one_hot(ys, 27) 
     print("x_hot: ", len(x_hot))
-    print("y_hot: ", len(y_hot))
     for i in range(len(x_hot[0])):
       print(x_hot[0][i].data[], end=" ")
 
@@ -75,24 +73,16 @@ fn train_make_more() raises:
         if batch_idx % 10 == 0:
             print("Batch:", batch_idx, "Range:", start, "to", end)
 
-        var batch_probs = List[List[Value]]()
-        for i in range(start, end):
-            """Compute logits (forward) and get probs (softmax)"""
-            batch_probs.append(Value.soft_max(layer(x_hot[i])))
-        print("  Batch probs size:", len(batch_probs))
-
         var batch_loss = List[Value]()
-        var acum_loss = Value(0.0)
-        var j = 0
+        var loss = Value(0.0)
         for i in range(start, end):
-            batch_loss.append(batch_probs[j][ys[i]].log())
-            acum_loss += batch_loss[j]
-            j += 1
+            batch_loss.append(Value.soft_max(layer(x_hot[i]))[ys[i]].log())
+            """Compute logits (forward), get probs (softmax), pick next char and 
+            convert predicted prob to real value"""
+            loss += - batch_loss[i-start]
+
         print("  Batch loss size:", len(batch_loss))
 
-        var loss = Value(0.0)
-        for i in range(end - start):
-            loss += - batch_loss[i]  # Sum negative log probs
         loss = loss / Value(Float64(end - start))  # Average over batch
         print("  Batch loss:", loss.data[])
 
