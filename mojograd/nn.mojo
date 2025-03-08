@@ -130,6 +130,10 @@ struct Layer:
             for p in n[].parameters(): out.append(p[])
         return out
 
+    fn zero_grad(self):
+        for p in self.parameters():
+          p[].grad[] = 0
+
     fn __moveinit__(out self, owned other: Layer):
         self.neurons = other.neurons^
     
@@ -192,7 +196,11 @@ struct MLP:
                 out.append(p[])
 
         return out
-    
+
+    fn zero_grad(self):
+        for p in self.parameters():
+          p[].grad[] = 0 
+
     fn __repr__(self) -> String:
         var mlp_repr = String("MLP of [\n" )
         for i in range(len(self.layers)):

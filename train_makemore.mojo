@@ -86,7 +86,7 @@ fn train_make_more() raises:
         loss = loss / Value(Float64(end - start))  # Average over batch
         print("  Batch loss:", loss.data[])
 
-        for par in layer.parameters():par[].grad[] = 0
+        layer.zero_grad()
 
         loss.backward()
 

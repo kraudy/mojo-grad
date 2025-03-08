@@ -136,8 +136,7 @@ fn create_mlp_model() raises:
             var acc: Float64
             (total_loss, acc) = loss(model, X, y, PythonObject(None))
 
-            #TODO: Implement this with trait 
-            for out in model.parameters():out[].grad[] = 0
+            model.zero_grad()
             """Not zeroing grads is one of the most common mistakes."""
 
             total_loss.backward()
