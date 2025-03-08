@@ -196,7 +196,6 @@ struct Value():
     
     fn log(self) -> Value:
         var out = Value(data = log(self.data[]), prev1 = self, op = 'log')
-        #var out = Value(data = log2(self.data[]), prev1 = self, op = 'log')
         fn _backward(v: ArcPointer[Value]) -> None:
             # Derivative of log(x) is 1/x
             v[]._prev[0][].grad[] += (1.0 / v[]._prev[0][].data[]) * v[].grad[]

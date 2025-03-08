@@ -85,6 +85,16 @@ fn train_make_more() raises:
             batch_probs.append(Value.soft_max(batch_logits[i]))
         print("  Batch probs size:", len(batch_probs))
 
+        var batch_loss = List[Value]()
+        var acum_loss = Value(0.0)
+        #for i in range(end - start):
+        var j = 0
+        for i in range(start, end):
+            batch_loss.append(batch_probs[j][ys[i]].log())
+            acum_loss += batch_loss[j]
+            j += 1
+        print("  Batch loss size:", len(batch_loss))
+
 
 fn main():   
     try:
