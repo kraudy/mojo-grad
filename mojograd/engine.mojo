@@ -116,6 +116,14 @@ struct Value():
 
     fn __sub__(self, other: Float64) -> Value:
         return self + (- other)
+    
+    fn __isub__(mut self, other: Value):
+        var out = self + (- other)
+        self = out
+
+    fn __isub__(mut self, other: Float64):
+        var out = self + (- other)
+        self = out
 
     fn __rsub__(self, other: Float64) -> Value:
         return other + (- self)
