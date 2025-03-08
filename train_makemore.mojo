@@ -87,13 +87,26 @@ fn train_make_more() raises:
 
         var batch_loss = List[Value]()
         var acum_loss = Value(0.0)
-        #for i in range(end - start):
         var j = 0
         for i in range(start, end):
             batch_loss.append(batch_probs[j][ys[i]].log())
             acum_loss += batch_loss[j]
             j += 1
         print("  Batch loss size:", len(batch_loss))
+
+        var loss = Value(0.0)
+        #for i in range(end - start):
+        #    loss += - (batch_loss[i] / acum_loss)
+        for i in range(end - start):
+            loss = loss - batch_loss[i]  # Sum negative log probs
+        loss = loss / Value(Float64(end - start))  # Average over batch
+        print("  Batch loss:", loss.data[])
+
+        for par in layer.parameters():par[].grad[] = 0
+
+        loss.backward()
+
+        for p in layer.parameters(): p[].data[] -= 0.1 * p[].grad[]
 
 
 fn main():   
