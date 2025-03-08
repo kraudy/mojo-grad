@@ -59,10 +59,32 @@ fn train_make_more() raises:
     print("x_hot: ", len(x_hot))
     print("y_hot: ", len(y_hot))
     for i in range(len(x_hot[0])):
-      print(x_hot[0][i].data[])
+      print(x_hot[0][i].data[], end=" ")
 
     var layer = Layer(27, 27, nonlin=False)
     """This is the same as a 27x27 matrix"""
+
+    # Batch processing
+    var batch_size = 1000
+    var num_batches = (len(x_hot) + batch_size - 1) // batch_size  # Ceiling division
+    print("Number of batches:", num_batches)
+
+    for batch_idx in range(num_batches):
+        var start = batch_idx * batch_size
+        var end = min(start + batch_size, len(x_hot))
+        if batch_idx % 10 == 0:
+            print("Batch:", batch_idx, "Range:", start, "to", end)
+
+        # Compute logits for this batch only
+        var batch_logits = List[List[Value]]()
+        for i in range(start, end):
+            batch_logits.append(layer(x_hot[i]))
+
+        var batch_probs = List[List[Value]]()
+        for i in range(end - start):
+            batch_probs.append(Value.soft_max(batch_logits[i]))
+        print("  Batch probs size:", len(batch_probs))
+
 
 fn main():   
     try:
