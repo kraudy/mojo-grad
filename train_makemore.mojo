@@ -75,14 +75,10 @@ fn train_make_more() raises:
         if batch_idx % 10 == 0:
             print("Batch:", batch_idx, "Range:", start, "to", end)
 
-        # Compute logits for this batch only
-        var batch_logits = List[List[Value]]()
-        for i in range(start, end):
-            batch_logits.append(layer(x_hot[i]))
-
         var batch_probs = List[List[Value]]()
-        for i in range(end - start):
-            batch_probs.append(Value.soft_max(batch_logits[i]))
+        for i in range(start, end):
+            """Compute logits (forward) and get probs (softmax)"""
+            batch_probs.append(Value.soft_max(layer(x_hot[i])))
         print("  Batch probs size:", len(batch_probs))
 
         var batch_loss = List[Value]()
