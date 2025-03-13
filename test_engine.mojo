@@ -98,6 +98,11 @@ fn main():
         assert_almost_equal(inputs[0].grad[], -0.9497, atol=1e-4, msg="inputs[0] data should be -0.9497")
         assert_almost_equal(inputs[1].grad[], 0.2246, atol=1e-4,  msg="inputs[1] data should be 0.2246")
         assert_almost_equal(inputs[2].grad[], 0.7251, atol=1e-4,  msg="inputs[2] data should be 0.7251")
+
+    fn tanh_check() raises:
+        #var inputs = List[Value](Value(-1.1719), Value(0.3234), Value(1.4956))
+        #TODO: Implement
+        pass
         
     try:
         old_mojograd_test()

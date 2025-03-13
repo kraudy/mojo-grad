@@ -73,17 +73,13 @@ fn train_make_more() raises:
         if batch_idx % 10 == 0:
             print("Batch:", batch_idx, "Range:", start, "to", end)
 
-        var batch_loss = List[Value]()
         var loss = Value(0.0)
         for i in range(start, end):
-            batch_loss.append(Value.soft_max(layer(x_hot[i]))[ys[i]].log())
-            """Compute logits (forward), get probs (softmax), pick next char and 
-            convert predicted prob to real value"""
-            loss += - batch_loss[i-start]
+            loss += - Value.soft_max(layer(x_hot[i]))[ys[i]].log()
+            """Compute logits (forward), get probs (softmax), pick next char, 
+            convert predicted prob to real value and accumulate loss"""
 
-        print("  Batch loss size:", len(batch_loss))
-
-        loss = loss / Value(Float64(end - start))  # Average over batch
+        loss /= (end - start)  # Average over batch
         print("  Batch loss:", loss.data[])
 
         layer.zero_grad()

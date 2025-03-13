@@ -202,6 +202,14 @@ struct Value():
         out._backward = _backward
         return out
     
+    fn tanh(self) -> Value:
+        var out = Value(data = (exp(self.data[] * 2) - 1) / (exp(self.data[] * 2) + 1), prev1 = self, op = 'tanh')
+        fn _backward(v: ArcPointer[Value]) -> None:
+            v[]._prev[0][].grad[] += (1 - v[].data[] ** 2) * v[].grad[] 
+            
+        out._backward = _backward
+        return out
+    
     fn log(self) -> Value:
         var out = Value(data = log(self.data[]), prev1 = self, op = 'log')
         fn _backward(v: ArcPointer[Value]) -> None:
