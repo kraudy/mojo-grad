@@ -91,6 +91,21 @@ struct Neuron:
 
         return neuron_type + " Neuron(" + str(len(self.w)) + ")"
 
+struct Linear:
+  var weight : List[Neuron]
+  var bias   : Optional[Neuron] 
+
+  fn __init__(out self, in_features: Int, out_features: Int, bias: Bool=True):
+    self.weight = List[Neuron]()
+    for _ in range(out_features): self.weight.append(Neuron(nin = in_features, nonlin = bias))
+
+    self.bias = Optional[Neuron](Neuron(nin=in_features, nonlin=bias)) if bias else None
+    #if bias:
+    #  self.bias = Optional[Neuron](Neuron(nin=in_features, nonlin=bias))
+    #else:
+    #  self.bias = Optional[Neuron](None)
+    
+
 #TODO: Implement inheritance
 struct Layer:
     """

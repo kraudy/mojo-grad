@@ -2,7 +2,7 @@
 """ 
 """
 
-from collections import Optional, List, Dict, InlineList, Set
+from collections import Optional, List, Dict, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 from math import exp, log, log2
 
@@ -224,7 +224,8 @@ struct Value():
         """Converts inputs to logits and normalize them to get a probability distribution."""
         var suma = Value(data=0.0)
         var exp_values = List[Value]()
-        #TODO: Consider finding max and substracting it from every value
+        #TODO: Consider finding max and substracting it from every value since
+        # large positive values can become inf when exp()
         for i in range(len(inputs)):
             exp_values.append(inputs[i].exp())
             suma += exp_values[i]
