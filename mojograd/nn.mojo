@@ -96,6 +96,7 @@ struct Linear:
   var bias   : Optional[Neuron] 
 
   fn __init__(out self, in_features: Int, out_features: Int, bias: Bool=True):
+    var bound = 1 / sqrt(in_features)
     self.weight = List[Neuron]()
     for _ in range(out_features): self.weight.append(Neuron(nin = in_features, nonlin = bias))
 

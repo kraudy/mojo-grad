@@ -5,6 +5,7 @@
 from collections import Optional, List, Dict, Set
 from memory import UnsafePointer, memset_zero, ArcPointer, pointer, Pointer
 from math import exp, log, log2
+from random import random_float64, rand
 
 # Global counter for unique IDs
 var global_id_counter: Int = 0
@@ -22,12 +23,24 @@ struct Value():
     var _backward  : fn (v: ArcPointer[Value]) -> None
     # var _prev :  Set[Value]
     #TODO: There has to be a better way to do this.
+    #TODO: Make this a touple, you only need 2 previous nodes at max in the computation graph 
     var _prev : List[ArcPointer[Value]]
 
     var _op : String
 
     @staticmethod
     fn no_backprop(v: ArcPointer[Value]) -> None: pass
+
+    @staticmethod
+    fn rand(in_features: Int) -> List[Value]:
+      var row = List[Value]()
+      for _ in range(in_features): row.append(Value(random_float64(-1.0, 1.0)))
+      return row
+    
+    @staticmethod
+    fn uniform(in_features: Int, low:Float64 = 0.0, high:Float64 =1.0,) :#-> List[Value]:
+      #return (high - low)
+      pass
 
     @always_inline
     fn __init__(out self, data: Float64):
