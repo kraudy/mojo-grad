@@ -38,9 +38,11 @@ struct Value():
       return row
     
     @staticmethod
-    fn uniform(in_features: Int, low:Float64 = 0.0, high:Float64 =1.0,) :#-> List[Value]:
-      #return (high - low)
-      pass
+    fn uniform(in_features: Int, low:Float64 = 0.0, high:Float64 =1.0,) -> List[Value]:
+      var row = Value.rand(in_features)
+      for i in range(in_features):
+        row[i] = row[i] * (high - low)
+      return row
 
     @always_inline
     fn __init__(out self, data: Float64):
